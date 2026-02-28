@@ -1,152 +1,253 @@
 """Enhanced CodeEditor with file open/save/save-as/close capabilities.
 
-Based on samples/code_editor_selection_handling.py with added file I/O toolbar.
+Based on CodeEditor control from Flet docs
+https://docs.flet.dev/codeeditor/ with added file I/O toolbar.
 """
 
 import asyncio
 from pathlib import Path
 
+import flet as ft
 import flet_code_editor as fce
 
-import flet as ft
-
 from flet_code_editor_enhanced.file_dialog import open_file, save_file
-
-# Map file extensions to CodeLanguage enum values.
-EXTENSION_TO_LANGUAGE: dict[str, fce.CodeLanguage] = {
-    ".py": fce.CodeLanguage.PYTHON,
-    ".js": fce.CodeLanguage.JAVASCRIPT,
-    ".jsx": fce.CodeLanguage.JAVASCRIPT,
-    ".ts": fce.CodeLanguage.TYPESCRIPT,
-    ".tsx": fce.CodeLanguage.TYPESCRIPT,
-    ".html": fce.CodeLanguage.HTMLBARS,
-    ".css": fce.CodeLanguage.CSS,
-    ".scss": fce.CodeLanguage.SCSS,
-    ".json": fce.CodeLanguage.JSON,
-    ".xml": fce.CodeLanguage.XML,
-    ".yaml": fce.CodeLanguage.YAML,
-    ".yml": fce.CodeLanguage.YAML,
-    ".toml": fce.CodeLanguage.INI,
-    ".md": fce.CodeLanguage.MARKDOWN,
-    ".txt": fce.CodeLanguage.PLAINTEXT,
-    ".sh": fce.CodeLanguage.BASH,
-    ".bash": fce.CodeLanguage.BASH,
-    ".zsh": fce.CodeLanguage.BASH,
-    ".rs": fce.CodeLanguage.RUST,
-    ".go": fce.CodeLanguage.GO,
-    ".java": fce.CodeLanguage.JAVA,
-    ".kt": fce.CodeLanguage.KOTLIN,
-    ".c": fce.CodeLanguage.CPP,
-    ".cpp": fce.CodeLanguage.CPP,
-    ".h": fce.CodeLanguage.CPP,
-    ".hpp": fce.CodeLanguage.CPP,
-    ".cs": fce.CodeLanguage.CS,
-    ".rb": fce.CodeLanguage.RUBY,
-    ".php": fce.CodeLanguage.PHP,
-    ".sql": fce.CodeLanguage.SQL,
-    ".r": fce.CodeLanguage.R,
-    ".swift": fce.CodeLanguage.SWIFT,
-    ".dart": fce.CodeLanguage.DART,
-    ".lua": fce.CodeLanguage.LUA,
-    ".vim": fce.CodeLanguage.VIM,
-    ".ini": fce.CodeLanguage.INI,
-    ".cfg": fce.CodeLanguage.INI,
-    ".makefile": fce.CodeLanguage.MAKEFILE,
-    ".dockerfile": fce.CodeLanguage.DOCKERFILE,
-    ".scala": fce.CodeLanguage.SCALA,
-    ".ex": fce.CodeLanguage.ELIXIR,
-    ".exs": fce.CodeLanguage.ELIXIR,
-    ".erl": fce.CodeLanguage.ERLANG,
-    ".hs": fce.CodeLanguage.HASKELL,
-    ".clj": fce.CodeLanguage.CLOJURE,
-    ".gradle": fce.CodeLanguage.GRADLE,
-    ".graphql": fce.CodeLanguage.GRAPHQL,
-    ".vue": fce.CodeLanguage.VUE,
-}
-
-
-def language_for_path(path: str | None) -> fce.CodeLanguage:
-    """Detect CodeLanguage from a file path's extension.
-
-    Args:
-        path: File path string, or None for untitled files.
-
-    Returns:
-        Matching CodeLanguage, or PLAINTEXT if unrecognised.
-    """
-    if path is None:
-        return fce.CodeLanguage.PLAINTEXT
-    ext = Path(path).suffix.lower()
-    return EXTENSION_TO_LANGUAGE.get(ext, fce.CodeLanguage.PLAINTEXT)
-
+from flet_code_editor_enhanced.languages import language_for_path
 
 DEFAULT_CODE = """\
 # New file
 """
 
 
-def main(page: ft.Page):
-    page.title = "CodeEditor — File I/O"
-    max_selection_preview = 80
+class EnhancedCodeEditor(ft.Column):
+    """A reusable Flet control that wraps CodeEditor with file I/O toolbar.
 
-    # --- State ---
-    current_path: list[str | None] = [None]  # mutable container for closure
-    dirty: list[bool] = [False]
-    last_saved_content: list[str] = [DEFAULT_CODE]
+    Provides Open, Save, Save As, and Close buttons plus keyboard shortcuts
+    (Cmd/Ctrl+O, S, Shift+S, W). Can be dropped into any Flet page layout.
 
-    # --- Theme (preserved from original sample) ---
-    theme = fce.CustomCodeTheme(
-        keyword=ft.TextStyle(color=ft.Colors.INDIGO_600, weight=ft.FontWeight.W_600),
-        string=ft.TextStyle(color=ft.Colors.RED_700),
-        comment=ft.TextStyle(color=ft.Colors.GREY_600, italic=True),
-    )
+    Args:
+        language: Initial code language for syntax highlighting.
+        value: Initial editor content.
+        show_toolbar: Whether to show the file I/O toolbar.
+        show_status_bar: Whether to show the line/column status bar.
+        register_keyboard_shortcuts: Whether to register global keyboard shortcuts.
+        autocomplete: Whether to enable autocomplete.
+        autocomplete_words: List of words for autocomplete suggestions.
+        code_theme: Custom code theme for syntax highlighting.
+        text_style: Text style for the editor content.
+        gutter_style: Style for the line number gutter.
+        on_title_change: Callback fired with (display_path, name, is_dirty) when
+            the file title or dirty state changes.
+    """
 
-    text_style = ft.TextStyle(font_family="monospace", height=1.2, size=13)
+    def __init__(
+        self,
+        language: fce.CodeLanguage = fce.CodeLanguage.PYTHON,
+        value: str = DEFAULT_CODE,
+        show_toolbar: bool = True,
+        show_status_bar: bool = True,
+        register_keyboard_shortcuts: bool = True,
+        autocomplete: bool = True,
+        autocomplete_words: list[str] | None = None,
+        code_theme: fce.CustomCodeTheme | None = None,
+        text_style: ft.TextStyle | None = None,
+        gutter_style: fce.GutterStyle | None = None,
+        on_title_change=None,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
 
-    gutter_style = fce.GutterStyle(
-        text_style=ft.TextStyle(font_family="monospace", height=1.2),
-        show_line_numbers=True,
-        show_folding_handles=True,
-        width=80,
-    )
+        # --- Configuration ---
+        self._register_keyboard_shortcuts = register_keyboard_shortcuts
+        self.on_title_change = on_title_change
 
-    # --- UI refs ---
-    title_bar = ft.Text("untitled", size=16, weight=ft.FontWeight.BOLD, expand=True)
+        # --- State ---
+        self._current_path: str | None = None
+        self._dirty: bool = False
+        self._last_saved_content: str = value
 
-    def _update_title():
-        if current_path[0]:
+        # --- Defaults ---
+        if code_theme is None:
+            code_theme = fce.CustomCodeTheme(
+                keyword=ft.TextStyle(
+                    color=ft.Colors.INDIGO_600, weight=ft.FontWeight.W_600
+                ),
+                string=ft.TextStyle(color=ft.Colors.RED_700),
+                comment=ft.TextStyle(color=ft.Colors.GREY_600, italic=True),
+            )
+
+        if text_style is None:
+            text_style = ft.TextStyle(font_family="monospace", height=1.2, size=13)
+
+        if gutter_style is None:
+            gutter_style = fce.GutterStyle(
+                text_style=ft.TextStyle(font_family="monospace", height=1.2),
+                show_line_numbers=True,
+                show_folding_handles=True,
+                width=80,
+            )
+
+        # --- UI elements ---
+        self._title_bar = ft.Text("untitled", size=12, expand=True)
+        self._status_bar = ft.Text(
+            "Ln 1, Col 1 | Python", size=12, color=ft.Colors.GREY_600
+        )
+
+        self._save_btn = ft.Button(
+            "Save",
+            icon=ft.Icons.SAVE,
+            tooltip="Save (⌘S)",
+            on_click=self._handle_save,
+            disabled=True,
+        )
+
+        self._code_editor = fce.CodeEditor(
+            language=language,
+            code_theme=code_theme,
+            autocomplete=autocomplete,
+            autocomplete_words=autocomplete_words or [],
+            value=value,
+            text_style=text_style,
+            gutter_style=gutter_style,
+            on_selection_change=self._handle_selection_change,
+            on_change=self._handle_change,
+            expand=True,
+        )
+
+        # --- Build layout ---
+        controls = []
+
+        controls.append(
+            ft.Row(
+                alignment=ft.MainAxisAlignment.CENTER,
+                controls=[self._title_bar],
+            )
+        )
+
+        if show_toolbar:
+            controls.append(
+                ft.Row(
+                    spacing=10,
+                    controls=[
+                        ft.Button(
+                            "Open",
+                            icon=ft.Icons.FOLDER_OPEN,
+                            tooltip="Open (⌘O)",
+                            on_click=self._handle_open,
+                        ),
+                        self._save_btn,
+                        ft.Button(
+                            "Save As",
+                            icon=ft.Icons.SAVE_AS,
+                            tooltip="Save As (⇧⌘S)",
+                            on_click=self._handle_save_as,
+                        ),
+                        ft.Button(
+                            "Close",
+                            icon=ft.Icons.CLOSE,
+                            tooltip="Close (⌘W)",
+                            on_click=self._handle_close,
+                        ),
+                    ],
+                )
+            )
+
+        controls.append(self._code_editor)
+
+        if show_status_bar:
+            controls.append(ft.Row(controls=[self._status_bar]))
+
+        self.spacing = 10
+        self.controls = controls
+
+    # --- Properties ---
+
+    @property
+    def current_path(self) -> str | None:
+        """The path of the currently open file, or None for untitled."""
+        return self._current_path
+
+    @property
+    def dirty(self) -> bool:
+        """Whether the editor has unsaved changes."""
+        return self._dirty
+
+    @property
+    def code_editor(self) -> fce.CodeEditor:
+        """The underlying CodeEditor control."""
+        return self._code_editor
+
+    @property
+    def value(self) -> str:
+        """The current editor content."""
+        return self._code_editor.value or ""
+
+    @value.setter
+    def value(self, content: str):
+        self._code_editor.value = content
+
+    @property
+    def language(self) -> fce.CodeLanguage:
+        """The current syntax highlighting language."""
+        return self._code_editor.language
+
+    @language.setter
+    def language(self, lang: fce.CodeLanguage):
+        self._code_editor.language = lang
+
+    # --- Lifecycle ---
+
+    def did_mount(self):
+        if self._register_keyboard_shortcuts:
+            self.page.on_keyboard_event = self._handle_keyboard
+
+    def will_unmount(self):
+        if self._register_keyboard_shortcuts and self.page:
+            self.page.on_keyboard_event = None
+
+    # --- Title / dirty state ---
+
+    def _update_title(self):
+        if self._current_path:
             try:
-                display = "~/" + str(Path(current_path[0]).relative_to(Path.home()))
+                display = "~/" + str(Path(self._current_path).relative_to(Path.home()))
             except ValueError:
-                display = current_path[0]
+                display = self._current_path
+            name = Path(self._current_path).name
         else:
             display = "untitled"
-        title_bar.value = display
-        title_bar.color = ft.Colors.AMBER_600 if dirty[0] else None
-        page.update()
+            name = "untitled"
 
-    def _mark_dirty():
-        if not dirty[0]:
-            dirty[0] = True
-            _update_title()
+        self._title_bar.value = display
+        self._title_bar.color = ft.Colors.AMBER_600 if self._dirty else None
 
-    def _mark_clean(content: str):
-        dirty[0] = False
-        last_saved_content[0] = content
-        _update_title()
+        if self.on_title_change:
+            self.on_title_change(display, name, self._dirty)
+
+        self.update()
+
+    def _mark_dirty(self):
+        if not self._dirty:
+            self._dirty = True
+            self._save_btn.disabled = False
+            self._update_title()
+
+    def _mark_clean(self, content: str):
+        self._dirty = False
+        self._last_saved_content = content
+        self._save_btn.disabled = True
+        self._update_title()
 
     # --- Unsaved-changes confirmation dialog ---
-    async def _confirm_discard() -> str:
+
+    async def _confirm_discard(self) -> str:
         """Show a Save/Discard/Cancel dialog. Returns chosen action string."""
-        choice_event = asyncio.Event()
-        choice: list[str] = ["cancel"]
+        choice: list[str | None] = [None]
 
         def _on_choice(action: str):
             def handler(_e):
                 choice[0] = action
                 dlg.open = False
-                page.update()
-                choice_event.set()
+                self.page.update()
 
             return handler
 
@@ -161,22 +262,25 @@ def main(page: ft.Page):
             ],
             actions_alignment=ft.MainAxisAlignment.END,
         )
-        page.overlay.append(dlg)
+        self.page.overlay.append(dlg)
         dlg.open = True
-        page.update()
+        self.page.update()
 
-        await choice_event.wait()
-        page.overlay.remove(dlg)
-        page.update()
+        while choice[0] is None:
+            await asyncio.sleep(0.05)
+
+        self.page.overlay.remove(dlg)
+        self.page.update()
         return choice[0]
 
-    # --- Toolbar actions ---
-    async def _handle_open(_e):
-        if dirty[0]:
-            action = await _confirm_discard()
+    # --- File operations ---
+
+    async def _handle_open(self, _e):
+        if self._dirty:
+            action = await self._confirm_discard()
             if action == "save":
-                await _do_save()
-                if dirty[0]:  # save was cancelled
+                await self._do_save()
+                if self._dirty:
                     return
             elif action == "cancel":
                 return
@@ -185,163 +289,135 @@ def main(page: ft.Page):
         if path is None:
             return
 
-        content = Path(path).read_text(encoding="utf-8")
-        editor.value = content
-        current_path[0] = path
-        editor.language = language_for_path(path)
-        _mark_clean(content)
-        await editor.focus()
+        try:
+            content = Path(path).read_text(encoding="utf-8")
+        except (UnicodeDecodeError, ValueError):
+            err = ft.SnackBar(ft.Text("Cannot open: file is not valid UTF-8 text"))
+            self.page.overlay.append(err)
+            err.open = True
+            self.page.update()
+            return
 
-    async def _do_save() -> bool:
+        self._current_path = path
+        self._last_saved_content = content
+        self._code_editor.value = content
+        self._code_editor.language = language_for_path(path)
+        self._mark_clean(content)
+        await self._code_editor.focus()
+
+    async def _do_save(self) -> bool:
         """Save to current_path. Returns True if saved, False if cancelled."""
-        if current_path[0] is None:
-            return await _do_save_as()
+        if self._current_path is None:
+            return await self._do_save_as()
 
-        content = editor.value or ""
-        Path(current_path[0]).write_text(content, encoding="utf-8")
-        _mark_clean(content)
+        content = self._code_editor.value or ""
+        Path(self._current_path).write_text(content, encoding="utf-8")
+        self._mark_clean(content)
         return True
 
-    async def _do_save_as() -> bool:
+    async def _do_save_as(self) -> bool:
         """Save As dialog. Returns True if saved, False if cancelled."""
-        default = Path(current_path[0]).name if current_path[0] else "untitled.txt"
+        default = (
+            Path(self._current_path).name if self._current_path else "untitled.txt"
+        )
         path = await save_file("Save File", default)
         if path is None:
             return False
 
-        current_path[0] = path
-        content = editor.value or ""
+        self._current_path = path
+        content = self._code_editor.value or ""
         Path(path).write_text(content, encoding="utf-8")
-        editor.language = language_for_path(path)
-        _mark_clean(content)
+        self._code_editor.language = language_for_path(path)
+        self._mark_clean(content)
         return True
 
-    async def _handle_save(_e):
-        await _do_save()
+    async def _handle_save(self, _e):
+        await self._do_save()
 
-    async def _handle_save_as(_e):
-        await _do_save_as()
+    async def _handle_save_as(self, _e):
+        await self._do_save_as()
 
-    async def _handle_close(_e):
-        if dirty[0]:
-            action = await _confirm_discard()
+    async def _handle_close(self, _e):
+        if self._dirty:
+            action = await self._confirm_discard()
             if action == "save":
-                saved = await _do_save()
+                saved = await self._do_save()
                 if not saved:
                     return
             elif action == "cancel":
                 return
 
-        editor.value = DEFAULT_CODE
-        editor.language = fce.CodeLanguage.PYTHON
-        current_path[0] = None
-        _mark_clean(DEFAULT_CODE)
-        await editor.focus()
+        self._current_path = None
+        self._dirty = False
+        self._last_saved_content = DEFAULT_CODE
+        self._save_btn.disabled = True
+        self._code_editor.language = fce.CodeLanguage.PYTHON
+        self._update_title()
+        await asyncio.sleep(0.05)
+        self._code_editor.value = DEFAULT_CODE
+        self.update()
+        await self._code_editor.focus()
 
-    # --- Selection handling (preserved from original sample) ---
-    def handle_selection_change(e: ft.TextSelectionChangeEvent[fce.CodeEditor]):
-        if e.selected_text:
-            normalized = " ".join(e.selected_text.split())
-            suffix = "..." if len(normalized) > max_selection_preview else ""
-            preview = normalized[:max_selection_preview]
-            selection.value = (
-                f"Selection ({len(e.selected_text)} chars): '{preview}{suffix}'"
-            )
-        else:
-            selection.value = "No selection."
-        selection_details.value = f"start={e.selection.start}, end={e.selection.end}"
-        caret.value = f"Caret position: {e.selection.end}"
+    # --- Keyboard shortcuts ---
 
-    def handle_change(_e):
-        content = editor.value or ""
-        if content != last_saved_content[0]:
-            _mark_dirty()
-        elif dirty[0]:
-            dirty[0] = False
-            _update_title()
+    async def _handle_keyboard(self, e: ft.KeyboardEvent):
+        if not (e.meta or e.ctrl):
+            return
+        key = e.key.upper()
+        if key == "S" and not e.shift:
+            await self._do_save()
+        elif key == "S" and e.shift:
+            await self._do_save_as()
+        elif key == "O":
+            await self._handle_open(None)
+        elif key == "W":
+            await self._handle_close(None)
 
-    async def select_all(_e):
-        await editor.focus()
-        editor.selection = ft.TextSelection(
-            base_offset=0,
-            extent_offset=len(editor.value or ""),
+    # --- Status bar ---
+
+    @staticmethod
+    def _offset_to_line_col(text: str, offset: int) -> tuple[int, int]:
+        before = text[: max(0, offset)]
+        lines = before.split("\n")
+        return len(lines), len(lines[-1]) + 1
+
+    def _handle_selection_change(self, e: ft.TextSelectionChangeEvent[fce.CodeEditor]):
+        caret_offset = e.selection.end
+        selected_text = e.selected_text or ""
+        content = self._code_editor.value or ""
+        line, col = self._offset_to_line_col(content, caret_offset)
+        lang = (
+            self._code_editor.language.name.replace("_", " ").title()
+            if self._code_editor.language
+            else "Plain Text"
         )
+        sel_info = f" | {len(selected_text)} chars selected" if selected_text else ""
+        self._status_bar.value = f"Ln {line}, Col {col} | {lang}{sel_info}"
+        self.update()
 
-    async def move_caret_to_start(_e):
-        await editor.focus()
-        editor.selection = ft.TextSelection(base_offset=0, extent_offset=0)
+    def _handle_change(self, _e):
+        content = self._code_editor.value or ""
+        if content != self._last_saved_content:
+            self._mark_dirty()
+        elif self._dirty:
+            self._dirty = False
+            self._save_btn.disabled = True
+            self._update_title()
 
-    # --- Layout ---
-    page.add(
-        ft.Column(
-            expand=True,
-            spacing=10,
-            controls=[
-                # Title bar
-                ft.Row(
-                    alignment=ft.MainAxisAlignment.CENTER,
-                    controls=[title_bar],
-                ),
-                # Toolbar
-                ft.Row(
-                    spacing=10,
-                    controls=[
-                        ft.Button(
-                            "Open",
-                            icon=ft.Icons.FOLDER_OPEN,
-                            on_click=_handle_open,
-                        ),
-                        ft.Button(
-                            "Save",
-                            icon=ft.Icons.SAVE,
-                            on_click=_handle_save,
-                        ),
-                        ft.Button(
-                            "Save As",
-                            icon=ft.Icons.SAVE_AS,
-                            on_click=_handle_save_as,
-                        ),
-                        ft.Button(
-                            "Close",
-                            icon=ft.Icons.CLOSE,
-                            on_click=_handle_close,
-                        ),
-                    ],
-                ),
-                # Editor
-                editor := fce.CodeEditor(
-                    language=fce.CodeLanguage.PYTHON,
-                    code_theme=theme,
-                    # code_theme=fce.CodeTheme.DARK,  # Uncomment to test custom theme vs built-in
-                    autocomplete=True,
-                    autocomplete_words=[
-                        "Container",
-                        "Button",
-                        "Text",
-                        "Row",
-                        "Column",
-                    ],
-                    value=DEFAULT_CODE,
-                    text_style=text_style,
-                    gutter_style=gutter_style,
-                    on_selection_change=handle_selection_change,
-                    on_change=handle_change,
-                    expand=True,
-                ),
-                # Selection info (preserved from original)
-                selection := ft.Text("Select some text from the editor."),
-                selection_details := ft.Text(),
-                caret := ft.Text("Caret position: -"),
-                ft.Row(
-                    spacing=10,
-                    controls=[
-                        ft.Button("Select all text", on_click=select_all),
-                        ft.Button("Move caret to start", on_click=move_caret_to_start),
-                    ],
-                ),
-            ],
-        )
+
+def main(page: ft.Page):
+    """Flet main entry point — standalone demo of the EnhancedCodeEditor."""
+    page.title = "CodeEditor"
+
+    def _on_title_change(display, name, is_dirty):
+        page.title = f"{name}{'*' if is_dirty else ''} — CodeEditor"
+        page.update()
+
+    editor = EnhancedCodeEditor(
+        expand=True,
+        on_title_change=_on_title_change,
     )
+    page.add(editor)
 
 
 def run():

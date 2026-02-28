@@ -10,54 +10,21 @@ import subprocess
 
 from loguru import logger
 
+from flet_code_editor_enhanced.languages import EXTENSION_TO_LANGUAGE
+
 IS_MACOS = platform.system() == "Darwin"
 
-# Common text/code file extensions for the open dialog filter.
-_TEXT_EXTENSIONS = [
-    "py",
-    "js",
-    "ts",
-    "jsx",
-    "tsx",
-    "html",
-    "css",
-    "scss",
-    "json",
-    "xml",
-    "yaml",
-    "yml",
-    "toml",
-    "md",
-    "txt",
-    "sh",
-    "bash",
-    "zsh",
-    "rs",
-    "go",
-    "java",
-    "kt",
-    "c",
-    "cpp",
-    "h",
-    "hpp",
-    "cs",
-    "rb",
-    "php",
-    "sql",
-    "r",
-    "swift",
-    "dart",
-    "lua",
-    "vim",
-    "conf",
-    "cfg",
-    "ini",
-    "env",
-    "csv",
-    "makefile",
-    "dockerfile",
-    "gitignore",
-]
+
+def _escape_applescript(s: str) -> str:
+    """Escape a string for safe interpolation into AppleScript."""
+    return s.replace("\\", "\\\\").replace('"', '\\"')
+
+
+# Derived from EXTENSION_TO_LANGUAGE, plus extras not tied to a CodeLanguage.
+_TEXT_EXTENSIONS = sorted(
+    {ext.lstrip(".") for ext in EXTENSION_TO_LANGUAGE}
+    | {"conf", "env", "csv", "gitignore"}
+)
 
 
 def _open_file_macos(prompt: str = "Open File") -> str | None:
@@ -70,9 +37,10 @@ def _open_file_macos(prompt: str = "Open File") -> str | None:
         POSIX path string of selected file, or None if cancelled/error.
     """
     try:
+        safe_prompt = _escape_applescript(prompt)
         type_list = ", ".join(f'"{ext}"' for ext in _TEXT_EXTENSIONS)
         script = (
-            f'POSIX path of (choose file with prompt "{prompt}" '
+            f'POSIX path of (choose file with prompt "{safe_prompt}" '
             f"of type {{{type_list}}})"
         )
         result = subprocess.run(
@@ -108,9 +76,11 @@ def _save_file_macos(
         POSIX path string of chosen save location, or None if cancelled/error.
     """
     try:
+        safe_prompt = _escape_applescript(prompt)
+        safe_name = _escape_applescript(default_name)
         script = (
-            f'POSIX path of (choose file name with prompt "{prompt}" '
-            f'default name "{default_name}")'
+            f'POSIX path of (choose file name with prompt "{safe_prompt}" '
+            f'default name "{safe_name}")'
         )
         result = subprocess.run(
             ["osascript", "-e", script],
