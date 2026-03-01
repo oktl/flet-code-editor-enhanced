@@ -10,7 +10,7 @@ import subprocess
 
 from loguru import logger
 
-from flet_code_editor_enhanced.languages import EXTENSION_TO_LANGUAGE
+from fce_enhanced.languages import EXTENSION_TO_LANGUAGE
 
 IS_MACOS = platform.system() == "Darwin"
 

@@ -1,13 +1,13 @@
-# flet-code-editor-enhanced
+# fce-enhanced
 
-An enhanced [Flet](https://flet.dev) CodeEditor control with file open/save/save-as/close capabilities.
+An enhanced [Flet](https://flet.dev) CodeEditor control with file open/save/save-as/close/search and replace capabilities.
 
 Built on top of [`flet-code-editor`](https://pypi.org/project/flet-code-editor/), adding a toolbar for common file operations and native macOS file dialogs.
 
 ## Install
 
 ```bash
-uv add flet-code-editor-enhanced
+uv add fce-enhanced
 ```
 
 ## Usage
@@ -15,21 +15,21 @@ uv add flet-code-editor-enhanced
 ### Run as a standalone app
 
 ```bash
-flet-code-editor-enhanced
+fce-enhanced
 ```
 
 Or:
 
 ```bash
-flet run src/flet_code_editor_enhanced/editor.py
+flet run src/fce_enhanced/editor.py
 ```
 
 ### Import in your own Flet app
 
 ```python
-from flet_code_editor_enhanced.editor import main
-from flet_code_editor_enhanced.editor import language_for_path, EXTENSION_TO_LANGUAGE
-from flet_code_editor_enhanced.file_dialog import open_file, save_file
+from fce_enhanced.editor import main
+from fce_enhanced.editor import language_for_path, EXTENSION_TO_LANGUAGE
+from fce_enhanced.file_dialog import open_file, save_file
 ```
 
 ## Features
@@ -51,8 +51,8 @@ MIT
 Clone the repo and install dependencies including dev tools:
 
 ```bash
-git clone https://github.com/yourusername/flet-code-editor-enhanced
-cd flet-code-editor-enhanced
+git clone https://github.com/yourusername/fce-enhanced
+cd fce-enhanced
 uv sync
 pre-commit install
 ```

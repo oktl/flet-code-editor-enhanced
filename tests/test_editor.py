@@ -1,4 +1,4 @@
-"""Tests for flet_code_editor_enhanced.editor (EnhancedCodeEditor control)."""
+"""Tests for fce_enhanced.editor (EnhancedCodeEditor control)."""
 
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
@@ -6,8 +6,8 @@ import flet as ft
 import flet_code_editor as fce
 import pytest
 
-from flet_code_editor_enhanced.editor import DEFAULT_CODE, EnhancedCodeEditor
-from flet_code_editor_enhanced.search import SearchReplaceBar
+from fce_enhanced.editor import DEFAULT_CODE, EnhancedCodeEditor
+from fce_enhanced.search import SearchReplaceBar
 
 
 # --- Helpers ---
@@ -318,7 +318,7 @@ async def test_do_save_as_writes_to_chosen_path(tmp_path):
         filepath = str(tmp_path / "saved.py")
 
         with patch(
-            "flet_code_editor_enhanced.editor.save_file",
+            "fce_enhanced.editor.save_file",
             new_callable=AsyncMock,
             return_value=filepath,
         ):
@@ -338,7 +338,7 @@ async def test_do_save_as_cancelled():
     _, p1, p2, p3 = _patch_page(editor)
     try:
         with patch(
-            "flet_code_editor_enhanced.editor.save_file",
+            "fce_enhanced.editor.save_file",
             new_callable=AsyncMock,
             return_value=None,
         ):
@@ -358,7 +358,7 @@ async def test_handle_open_loads_file(tmp_py_file):
     _, p1, p2, p3 = _patch_page(editor)
     try:
         with patch(
-            "flet_code_editor_enhanced.editor.open_file",
+            "fce_enhanced.editor.open_file",
             new_callable=AsyncMock,
             return_value=str(tmp_py_file),
         ):
@@ -380,7 +380,7 @@ async def test_handle_open_cancelled():
         editor._code_editor.value = "original"
 
         with patch(
-            "flet_code_editor_enhanced.editor.open_file",
+            "fce_enhanced.editor.open_file",
             new_callable=AsyncMock,
             return_value=None,
         ):

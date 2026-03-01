@@ -1,7 +1,7 @@
 [project]
-name = "flet-code-editor-enhanced"
+name = "fce-enhanced"
 version = "0.1.0"
-description = "Enhanced Flet CodeEditor with file open/save/save-as/close capabilities"
+description = "Enhanced Flet CodeEditor with file open/save/save-as/close/search and replace capabilities"
 readme = "README.md"
 authors = [
     { name = "Tim Lang", email = "ttim.lang@gmail.com" }
@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [project.scripts]
-flet-code-editor-enhanced = "flet_code_editor_enhanced.editor:run"
+fce-enhanced = "fce_enhanced.editor:run"
 
 [build-system]
 requires = ["uv_build>=0.10.4,<0.11.0"]

@@ -1,9 +1,9 @@
-"""Tests for flet_code_editor_enhanced.search (SearchReplaceBar control)."""
+"""Tests for fce_enhanced.search (SearchReplaceBar control)."""
 
 from unittest.mock import MagicMock
 
 
-from flet_code_editor_enhanced.search import SearchReplaceBar
+from fce_enhanced.search import SearchReplaceBar
 
 
 # --- Helpers ---

@@ -1,8 +1,8 @@
-"""Tests for flet_code_editor_enhanced.languages."""
+"""Tests for fce_enhanced.languages."""
 
 import flet_code_editor as fce
 
-from flet_code_editor_enhanced.languages import EXTENSION_TO_LANGUAGE, language_for_path
+from fce_enhanced.languages import EXTENSION_TO_LANGUAGE, language_for_path
 
 
 def test_language_for_path_python():

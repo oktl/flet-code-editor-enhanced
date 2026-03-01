@@ -52,6 +52,37 @@ wheels = [
 ]
 
 [[package]]
+name = "fce-enhanced"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "flet" },
+    { name = "flet-code-editor" },
+    { name = "loguru" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pre-commit" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "flet", specifier = ">=0.81.0" },
+    { name = "flet-code-editor", specifier = ">=0.81.0" },
+    { name = "loguru", specifier = ">=0.7" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pre-commit", specifier = ">=4.5.1" },
+    { name = "pytest", specifier = ">=8.0" },
+    { name = "pytest-asyncio", specifier = ">=0.24" },
+]
+
+[[package]]
 name = "filelock"
 version = "3.24.3"
 source = { registry = "https://pypi.org/simple" }
@@ -85,37 +116,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e5/b4/742c199809ac87a34c74e1a371efd6fa5196e0ecee622bc820e938384be3/flet_code_editor-0.81.0.tar.gz", hash = "sha256:e1a2e15292a5d2fe3e492682f12a8422a3e2de509f8e67581d4c3d335f971b63", size = 22316, upload-time = "2026-02-24T18:18:00.706Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/06/29/c67ed829fb3510b6dd4e8af9e80987428a8fc907a99d3540b163ca0996a7/flet_code_editor-0.81.0-py3-none-any.whl", hash = "sha256:6c4fb3686c2adf573ac1832c3156527db71d5a74fa17dabbf86659458aefd0d5", size = 24016, upload-time = "2026-02-24T18:18:01.725Z" },
-]
-
-[[package]]
-name = "flet-code-editor-enhanced"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "flet" },
-    { name = "flet-code-editor" },
-    { name = "loguru" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "pre-commit" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "flet", specifier = ">=0.81.0" },
-    { name = "flet-code-editor", specifier = ">=0.81.0" },
-    { name = "loguru", specifier = ">=0.7" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "pre-commit", specifier = ">=4.5.1" },
-    { name = "pytest", specifier = ">=8.0" },
-    { name = "pytest-asyncio", specifier = ">=0.24" },
 ]
 
 [[package]]

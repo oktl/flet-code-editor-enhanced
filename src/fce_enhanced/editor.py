@@ -10,9 +10,9 @@ from pathlib import Path
 import flet as ft
 import flet_code_editor as fce
 
-from flet_code_editor_enhanced.file_dialog import open_file, save_file
-from flet_code_editor_enhanced.languages import language_for_path
-from flet_code_editor_enhanced.search import SearchReplaceBar
+from fce_enhanced.file_dialog import open_file, save_file
+from fce_enhanced.languages import language_for_path
+from fce_enhanced.search import SearchReplaceBar
 
 DEFAULT_CODE = """\
 # New file
