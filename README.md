@@ -40,6 +40,8 @@ from fce_enhanced.file_dialog import open_file, save_file
 - **Close** the current file with unsaved-changes confirmation
 - Automatic language detection from file extension (40+ languages)
 - Dirty-file indicator in the title bar
+- **Search & Replace** with a find toolbar
+- **Ruff on Save** — automatically runs `ruff check --fix` and `ruff format` when saving Python files (requires ruff on PATH)
 - Selection and caret position display
 
 ## License
