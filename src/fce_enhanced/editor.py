@@ -784,7 +784,7 @@ class EnhancedCodeEditor(ft.Column):
             text_size=13,
             label_style=ft.TextStyle(size=12),
             dense=True,
-            content_padding=ft.padding.symmetric(horizontal=8, vertical=4),
+            content_padding=ft.Padding.symmetric(horizontal=8, vertical=4),
         )
 
         def _go(_e):
@@ -811,8 +811,8 @@ class EnhancedCodeEditor(ft.Column):
                 ft.TextButton("Go", on_click=_go, style=BUTTON_STYLE),
             ],
             actions_alignment=ft.MainAxisAlignment.END,
-            content_padding=ft.padding.symmetric(horizontal=20, vertical=8),
-            actions_padding=ft.padding.only(right=12, bottom=8),
+            content_padding=ft.Padding.symmetric(horizontal=20, vertical=8),
+            actions_padding=ft.Padding.only(right=12, bottom=8),
         )
         self.page.overlay.append(dlg)
         dlg.open = True
