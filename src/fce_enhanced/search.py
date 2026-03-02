@@ -7,7 +7,7 @@ from collections.abc import Callable
 
 import flet as ft
 
-BUTTON_STYLE = ft.ButtonStyle(text_style=ft.TextStyle(size=10))
+SEARCH_BUTTON_STYLE = ft.ButtonStyle(text_style=ft.TextStyle(size=10))
 
 
 class SearchReplaceBar(ft.Column):
@@ -97,10 +97,14 @@ class SearchReplaceBar(ft.Column):
                 ft.Container(width=40),  # spacer to align with search field
                 self._replace_field,
                 ft.TextButton(
-                    "Replace", on_click=self._handle_replace_one, style=BUTTON_STYLE
+                    "Replace",
+                    on_click=self._handle_replace_one,
+                    style=SEARCH_BUTTON_STYLE,
                 ),
                 ft.TextButton(
-                    "Replace All", on_click=self._handle_replace_all, style=BUTTON_STYLE
+                    "Replace All",
+                    on_click=self._handle_replace_all,
+                    style=SEARCH_BUTTON_STYLE,
                 ),
             ],
         )
