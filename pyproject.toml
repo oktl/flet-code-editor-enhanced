@@ -11,9 +11,7 @@ requires-python = ">=3.12"
 dependencies = [
     "flet>=0.81.0",
     "flet-code-editor>=0.81.0",
-    "loguru>=0.7",
-    "pre-commit>=4.5.1",
-    "ruff>=0.15.4",
+    "loguru>=0.7",    
 ]
 
 [project.scripts]
@@ -28,6 +26,7 @@ dev = [
     "pre-commit>=4.5.1",
     "pytest>=8.0",
     "pytest-asyncio>=0.24",
+    "ruff>=0.15.4",
 ]
 
 [tool.pytest.ini_options]

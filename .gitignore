@@ -11,6 +11,7 @@ wheels/
 
 # IDE files
 .vscode/
+.vscode/settings.json
 .idea/
 
 # Flet Code Editor Enhanced specific
