@@ -322,6 +322,27 @@ def test_recompute_updates_matches():
 # --- Toggle replace visibility ---
 
 
+def test_replace_all_with_backslash_in_replacement():
+    """Replacement strings with regex backreferences like \\1 should be treated literally."""
+    bar, _, replace_text = _make_bar("hello world hello")
+    _search(bar, "hello")
+    bar._replace_field.value = r"\1 backslash"
+    bar._handle_replace_all(None)
+    result = replace_text.call_args[0][0]
+    assert result == r"\1 backslash world \1 backslash"
+
+
+def test_replace_all_case_insensitive_with_backslash():
+    """Case-insensitive replace with backreference-like replacement should not crash."""
+    text = "Hello world HELLO"
+    bar, _, replace_text = _make_bar(text)
+    _search(bar, "hello", case_sensitive=False)
+    bar._replace_field.value = r"\g<0>"
+    bar._handle_replace_all(None)
+    result = replace_text.call_args[0][0]
+    assert result == r"\g<0> world \g<0>"
+
+
 def test_toggle_replace():
     bar, _, _ = _make_bar()
     bar.open(with_replace=False)

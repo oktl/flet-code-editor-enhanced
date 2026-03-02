@@ -268,7 +268,7 @@ class EnhancedCodeEditor(ft.Column):
     # --- Lifecycle ---
 
     def did_mount(self):
-        if self._register_keyboard_shortcuts:
+        if self._register_keyboard_shortcuts and self.page:
             self.page.on_keyboard_event = self._handle_keyboard
 
     def will_unmount(self):
@@ -362,8 +362,8 @@ class EnhancedCodeEditor(ft.Column):
 
         try:
             content = Path(path).read_text(encoding="utf-8")
-        except (UnicodeDecodeError, ValueError):
-            err = ft.SnackBar(ft.Text("Cannot open: file is not valid UTF-8 text"))
+        except (OSError, UnicodeDecodeError, ValueError) as exc:
+            err = ft.SnackBar(ft.Text(f"Cannot open file: {exc}"))
             self.page.overlay.append(err)
             err.open = True
             self.page.update()
@@ -448,7 +448,11 @@ class EnhancedCodeEditor(ft.Column):
             return
 
         # Reload formatted content into editor
-        formatted = Path(path).read_text(encoding="utf-8")
+        try:
+            formatted = Path(path).read_text(encoding="utf-8")
+        except OSError as exc:
+            logger.warning("Failed to reload after ruff: {}", exc)
+            return
         if formatted != self._code_editor.value:
             self._code_editor.value = formatted
             self._last_saved_content = formatted
@@ -460,7 +464,12 @@ class EnhancedCodeEditor(ft.Column):
             return await self._do_save_as()
 
         content = self._code_editor.value or ""
-        Path(self._current_path).write_text(content, encoding="utf-8")
+        try:
+            Path(self._current_path).write_text(content, encoding="utf-8")
+        except OSError as exc:
+            logger.error("Failed to save {}: {}", self._current_path, exc)
+            self._show_snackbar(f"Save failed: {exc}", is_error=True)
+            return False
         self._mark_clean(content)
         await self._run_ruff(self._current_path)
         return True
@@ -474,9 +483,14 @@ class EnhancedCodeEditor(ft.Column):
         if path is None:
             return False
 
-        self._current_path = path
         content = self._code_editor.value or ""
-        Path(path).write_text(content, encoding="utf-8")
+        try:
+            Path(path).write_text(content, encoding="utf-8")
+        except OSError as exc:
+            logger.error("Failed to save {}: {}", path, exc)
+            self._show_snackbar(f"Save failed: {exc}", is_error=True)
+            return False
+        self._current_path = path
         self._code_editor.language = language_for_path(path)
         self._mark_clean(content)
         await self._run_ruff(path)

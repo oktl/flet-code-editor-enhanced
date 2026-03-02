@@ -524,6 +524,79 @@ def test_handle_change_recomputes_search():
         _cleanup_patches(p1, p2, p3)
 
 
+# --- File I/O error handling ---
+
+
+@pytest.mark.asyncio
+async def test_do_save_handles_write_error(tmp_path):
+    editor = _make_editor(ruff_on_save=False)
+    _, p1, p2, p3 = _patch_page(editor)
+    try:
+        editor._current_path = str(tmp_path / "output.py")
+        editor._code_editor.value = "print('hello')"
+        editor._mark_dirty()
+
+        with patch("pathlib.Path.write_text", side_effect=PermissionError("denied")):
+            result = await editor._do_save()
+
+        assert result is False
+        assert editor.dirty is True
+    finally:
+        _cleanup_patches(p1, p2, p3)
+
+
+@pytest.mark.asyncio
+async def test_do_save_as_write_error_preserves_path():
+    """If Save As write fails, _current_path should not change."""
+    editor = _make_editor(ruff_on_save=False)
+    _, p1, p2, p3 = _patch_page(editor)
+    try:
+        editor._current_path = "/original/path.py"
+        editor._code_editor.value = "content"
+
+        with (
+            patch(
+                "fce_enhanced.editor.save_file",
+                new_callable=AsyncMock,
+                return_value="/new/path.py",
+            ),
+            patch("pathlib.Path.write_text", side_effect=OSError("disk full")),
+        ):
+            result = await editor._do_save_as()
+
+        assert result is False
+        assert editor._current_path == "/original/path.py"
+    finally:
+        _cleanup_patches(p1, p2, p3)
+
+
+@pytest.mark.asyncio
+async def test_handle_open_permission_error():
+    editor = _make_editor()
+    _, p1, p2, p3 = _patch_page(editor)
+    try:
+        with (
+            patch(
+                "fce_enhanced.editor.open_file",
+                new_callable=AsyncMock,
+                return_value="/some/file.py",
+            ),
+            patch(
+                "pathlib.Path.read_text",
+                side_effect=PermissionError("access denied"),
+            ),
+        ):
+            await editor._handle_open(None)
+
+        # Should show a snackbar error, not crash
+        snackbars = [s for s in editor.page.overlay if isinstance(s, ft.SnackBar)]
+        assert len(snackbars) == 1
+        assert "access denied" in snackbars[0].content.value
+        assert editor._current_path is None
+    finally:
+        _cleanup_patches(p1, p2, p3)
+
+
 # --- Ruff on save ---
 
 

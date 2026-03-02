@@ -307,7 +307,9 @@ class SearchReplaceBar(ft.Column):
         if self._case_sensitive:
             new_text = text.replace(query, replacement)
         else:
-            new_text = re.sub(re.escape(query), replacement, text, flags=re.IGNORECASE)
+            new_text = re.sub(
+                re.escape(query), lambda _: replacement, text, flags=re.IGNORECASE
+            )
 
         self._replace_text(new_text)
         self._compute_matches()
