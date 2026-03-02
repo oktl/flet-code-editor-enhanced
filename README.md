@@ -1,13 +1,18 @@
 # fce-enhanced
 
-An enhanced [Flet](https://flet.dev) CodeEditor control with file open/save/save-as/close/search and replace capabilities.
+An enhanced [Flet](https://flet.dev) CodeEditor control with file I/O, search/replace, syntax highlighting, and theme selection.
 
-Built on top of [`flet-code-editor`](https://pypi.org/project/flet-code-editor/), adding a toolbar for common file operations and native macOS file dialogs.
+Built on top of [`flet-code-editor`](https://pypi.org/project/flet-code-editor/), adding a full-featured editing experience you can drop into any Flet app or run standalone. This project was created to explore and showcase what's possible with Flet — building a desktop-quality code editor entirely in Python.
 
 ## Install
 
 ```bash
-uv add fce-enhanced
+git clone https://github.com/oktl/flet-fce-enhanced.git
+or GitHub CLI: 
+    gh repo clone oktl/flet-fce-enhanced
+cd fce-enhanced
+uv sync
+pre-commit install  # optional, for development
 ```
 
 ## Usage
@@ -18,32 +23,121 @@ uv add fce-enhanced
 fce-enhanced
 ```
 
-Or:
+Or during development:
 
 ```bash
 flet run src/fce_enhanced/editor.py
 ```
 
-### Import in your own Flet app
+### Embed in your own Flet app
+
+`EnhancedCodeEditor` is a standard `ft.Column` subclass — add it to any Flet page or layout just like any other control.
+
+#### Minimal example
 
 ```python
-from fce_enhanced.editor import main
-from fce_enhanced.editor import language_for_path, EXTENSION_TO_LANGUAGE
-from fce_enhanced.file_dialog import open_file, save_file
+import flet as ft
+from fce_enhanced import EnhancedCodeEditor
+
+
+def main(page: ft.Page):
+    page.title = "My Editor"
+    editor = EnhancedCodeEditor(expand=True)
+    page.add(editor)
+
+
+ft.run(main)
+```
+
+#### With configuration
+
+```python
+import flet as ft
+import flet_code_editor as fce
+from fce_enhanced import EnhancedCodeEditor
+
+
+def main(page: ft.Page):
+    page.title = "My Editor"
+
+    def on_title_change(display_path, name, is_dirty):
+        page.title = f"{name}{'*' if is_dirty else ''} — My Editor"
+        page.update()
+
+    editor = EnhancedCodeEditor(
+        language=fce.CodeLanguage.JAVASCRIPT,
+        value="console.log('hello');",
+        code_theme=fce.CodeTheme.MONOKAI,
+        on_title_change=on_title_change,
+        ruff_on_save=False,  # disable ruff (only applies to Python files)
+        expand=True,
+    )
+    page.add(editor)
+
+
+ft.run(main)
+```
+
+#### Constructor parameters
+
+| Parameter                     | Type           | Default          | Description                                |
+| ----------------------------- | -------------- | ---------------- | ------------------------------------------ |
+| `language`                    | `CodeLanguage` | `PYTHON`         | Initial syntax highlighting language       |
+| `value`                       | `str`          | `"# New file\n"` | Initial editor content                     |
+| `show_toolbar`                | `bool`         | `True`           | Show the file I/O toolbar                  |
+| `show_status_bar`             | `bool`         | `True`           | Show the line/column status bar            |
+| `register_keyboard_shortcuts` | `bool`         | `True`           | Register global keyboard shortcuts         |
+| `autocomplete`                | `bool`         | `True`           | Enable autocomplete                        |
+| `autocomplete_words`          | `list[str]`    | `None`           | Custom autocomplete suggestions            |
+| `code_theme`                  | `CodeTheme`    | `ATOM_ONE_DARK`  | Syntax highlighting theme                  |
+| `text_style`                  | `TextStyle`    | `None`           | Text style for editor content              |
+| `gutter_style`                | `GutterStyle`  | `None`           | Style for the line number gutter           |
+| `on_title_change`             | `callable`     | `None`           | Callback `(display_path, name, is_dirty)`  |
+| `ruff_on_save`                | `bool`         | `True`           | Auto-format Python files with ruff on save |
+
+Any additional keyword arguments are passed through to `ft.Column`.
+
+#### Useful properties
+
+```python
+editor.value           # current editor content (str)
+editor.current_path    # path of open file, or None
+editor.dirty           # True if there are unsaved changes
+editor.language        # current CodeLanguage
+editor.code_editor     # the underlying fce.CodeEditor control
+editor.search_bar      # the SearchReplaceBar control
 ```
 
 ## Features
 
-- **Open** files with a native macOS file dialog (falls back to Flet's FilePicker on other platforms)
-- **Save** the current file (Ctrl+S style workflow)
-- **Save As** to a new location
-- **Close** the current file with unsaved-changes confirmation
-- Automatic language detection from file extension (40+ languages)
-- Dirty-file indicator in the title bar
-- **Search & Replace** with a find toolbar
-- **Theme Selector** — choose from 89 built-in syntax highlighting themes via a searchable palette dialog
-- **Ruff on Save** — automatically runs `ruff check --fix` and `ruff format` when saving Python files (requires ruff on PATH)
-- Selection and caret position display
+- **File operations** — Open, Save, Save As, Close with unsaved-changes confirmation
+- **Native file dialogs** — AppleScript dialogs on macOS, Flet FilePicker fallback elsewhere
+- **Search & Replace** — Find toolbar with match counting, case sensitivity toggle, prev/next navigation
+- **Command Palette** — Searchable list of all actions (Cmd+Shift+P / Ctrl+Shift+P)
+- **Theme Selector** — 89 built-in syntax highlighting themes via a searchable dialog
+- **Go to Line** — Jump to a specific line number (Cmd+G / Ctrl+G)
+- **Read-Only Mode** — Toggle editing lock (Cmd+L / Ctrl+L)
+- **Font Size Controls** — Increase/decrease font size (Cmd+= / Cmd+-)
+- **Language Detection** — Automatic syntax highlighting for 40+ file extensions
+- **Dirty-File Tracking** — Visual indicator for unsaved changes
+- **Ruff on Save** — Auto-runs `ruff check --fix` and `ruff format` on Python files (requires ruff on PATH)
+- **Status Bar** — Line, column, language, and selection info
+
+### Keyboard shortcuts
+
+| Action             | macOS | Windows / Linux |
+| ------------------ | ----- | --------------- |
+| Open File          | ⌘O    | Ctrl+O          |
+| Save               | ⌘S    | Ctrl+S          |
+| Save As            | ⇧⌘S   | Ctrl+Shift+S    |
+| Close File         | ⌘W    | Ctrl+W          |
+| Find               | ⌘F    | Ctrl+F          |
+| Find and Replace   | ⌘H    | Ctrl+H          |
+| Go to Line         | ⌘G    | Ctrl+G          |
+| Toggle Read-Only   | ⌘L    | Ctrl+L          |
+| Increase Font Size | ⌘+    | Ctrl++          |
+| Decrease Font Size | ⌘-    | Ctrl+-          |
+| Command Palette    | ⇧⌘P   | Ctrl+Shift+P    |
 
 ## License
 
@@ -51,17 +145,20 @@ MIT
 
 ## Development
 
-Clone the repo and install dependencies including dev tools:
-
-```bash
-git clone https://github.com/yourusername/fce-enhanced
-cd fce-enhanced
-uv sync
-pre-commit install
-```
-
-Code style is enforced with [ruff](https://docs.astral.sh/ruff/). The pre-commit hook will run automatically on each commit, or you can run it manually:
+Code style is enforced with [ruff](https://docs.astral.sh/ruff/) via pre-commit hooks:
 
 ```bash
 pre-commit run --all-files
 ```
+
+Run tests:
+
+```bash
+pytest
+```
+
+## Built With
+
+- [Flet](https://flet.dev) — Build multi-platform apps in Python powered by Flutter
+- [flet-code-editor](https://pypi.org/project/flet-code-editor/) — Code editor control for Flet with syntax highlighting
+- [ruff](https://docs.astral.sh/ruff/) — Fast Python linter and formatter
