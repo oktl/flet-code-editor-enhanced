@@ -16,3 +16,4 @@ wheels/
 # Flet Code Editor Enhanced specific
 *.fcebackup
 dev/
+CLAUDE.md
