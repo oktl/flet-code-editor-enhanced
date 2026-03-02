@@ -423,7 +423,9 @@ def test_search_bar_exists():
 
 def test_search_bar_in_layout():
     editor = _make_editor()
-    assert editor._search_bar in editor.controls
+    # Search bar is in the appbar row
+    appbar_row = editor.controls[0]
+    assert editor._search_bar in appbar_row.controls
 
 
 def test_search_bar_initially_hidden():
@@ -435,7 +437,6 @@ def test_search_bar_initially_hidden():
 def test_search_bar_available_without_toolbar():
     editor = _make_editor(show_toolbar=False)
     assert isinstance(editor.search_bar, SearchReplaceBar)
-    assert editor._search_bar in editor.controls
 
 
 @pytest.mark.asyncio

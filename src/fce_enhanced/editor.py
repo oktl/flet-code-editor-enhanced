@@ -108,6 +108,12 @@ class EnhancedCodeEditor(ft.Column):
             on_click=self._handle_save,
             disabled=True,
         )
+        self._lock_btn = ft.IconButton(
+            ft.Icons.LOCK_OPEN,
+            icon_size=ICON_SIZE,
+            tooltip="Toggle Read-Only (⌘L)",
+            on_click=lambda _e: self._toggle_read_only(),
+        )
 
         self._code_editor = fce.CodeEditor(
             language=language,
@@ -169,6 +175,7 @@ class EnhancedCodeEditor(ft.Column):
                     on_click=self._handle_find_click,
                 ),
                 self.search_bar,
+                self._lock_btn,
             ],
         )
 
@@ -539,6 +546,17 @@ class EnhancedCodeEditor(ft.Column):
         self.page.update()
         self.update()
 
+    # --- Read-only toggle ---
+
+    def _toggle_read_only(self) -> None:
+        read_only = not self._code_editor.read_only
+        self._code_editor.read_only = read_only
+        self._lock_btn.icon = ft.Icons.LOCK if read_only else ft.Icons.LOCK_OPEN
+        self._lock_btn.tooltip = (
+            "Unlock Editing (⌘L)" if read_only else "Toggle Read-Only (⌘L)"
+        )
+        self.update()
+
     # --- Search / Replace ---
 
     @property
@@ -602,6 +620,8 @@ class EnhancedCodeEditor(ft.Column):
             await self._handle_open(None)
         elif key == "W":
             await self._handle_close(None)
+        elif key == "L":
+            self._toggle_read_only()
 
     # --- Status bar ---
 
