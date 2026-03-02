@@ -103,14 +103,15 @@ def test_code_editor_property():
 
 def test_toolbar_shown_by_default():
     editor = _make_editor()
-    # Toolbar is the second control (after title bar row)
-    toolbar_row = editor.controls[1]
-    button_labels = [c.content for c in toolbar_row.controls if hasattr(c, "content")]
-    assert "Open" in button_labels
-    assert "Save" in button_labels
-    assert "Save As" in button_labels
-    assert "Close" in button_labels
-    assert "Find" in button_labels
+    # Toolbar is the first control (appbar row with icon buttons)
+    toolbar_row = editor.controls[0]
+    tooltips = [
+        c.tooltip for c in toolbar_row.controls if hasattr(c, "tooltip") and c.tooltip
+    ]
+    assert any("Open" in t for t in tooltips)
+    assert any("Save As" in t for t in tooltips)
+    assert any("Close" in t for t in tooltips)
+    assert any("Find" in t for t in tooltips)
 
 
 def test_toolbar_hidden():
@@ -273,7 +274,7 @@ def test_offset_to_line_col_end_of_first_line():
 
 @pytest.mark.asyncio
 async def test_do_save_writes_file(tmp_path):
-    editor = _make_editor()
+    editor = _make_editor(ruff_on_save=False)
     _, p1, p2, p3 = _patch_page(editor)
     try:
         filepath = str(tmp_path / "output.py")
