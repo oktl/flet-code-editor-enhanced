@@ -31,6 +31,10 @@ dev = [
 
 [tool.ruff]
 select = ["E", "F", "I"]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "SIM108", # ternary operator (readability preference)
+]
 
 [tool.ruff.isort]
 known-first-party = ["fce_enhanced"]

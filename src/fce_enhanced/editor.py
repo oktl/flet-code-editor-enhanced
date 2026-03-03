@@ -5,9 +5,9 @@ https://docs.flet.dev/codeeditor/ with added file I/O toolbar.
 """
 
 import asyncio
+from pathlib import Path
 import platform
 import shutil
-from pathlib import Path
 
 import flet as ft
 import flet_code_editor as fce
@@ -92,7 +92,9 @@ class EnhancedCodeEditor(ft.Column):
 
         if text_style is None:
             text_style = ft.TextStyle(
-                font_family="monospace", height=1.2, size=self._font_size
+                font_family="monospace",
+                height=1.2,
+                size=self._font_size,
             )
 
         if gutter_style is None:
@@ -121,6 +123,13 @@ class EnhancedCodeEditor(ft.Column):
             icon_size=ICON_SIZE,
             tooltip="Toggle Read-Only (⌘L)",
             on_click=lambda _e: self._toggle_read_only(),
+        )
+        self._ruff_btn = ft.IconButton(
+            ft.Icons.AUTO_FIX_HIGH if self._ruff_on_save else ft.Icons.AUTO_FIX_OFF,
+            icon_size=ICON_SIZE,
+            icon_color=None if self._ruff_on_save else ft.Colors.GREY_600,
+            tooltip="Ruff on Save: ON" if self._ruff_on_save else "Ruff on Save: OFF",
+            on_click=self._toggle_ruff_on_save,
         )
         self._font_size_label = ft.Text(
             f"{self._font_size}px", size=11, color=ft.Colors.GREY_600
@@ -212,6 +221,7 @@ class EnhancedCodeEditor(ft.Column):
                 ),
                 self.divder,
                 self._lock_btn,
+                self._ruff_btn,
                 ft.Container(expand=True),  # spacer to push right-side controls
                 self._lang_btn,
                 ft.IconButton(
@@ -250,6 +260,11 @@ class EnhancedCodeEditor(ft.Column):
     def current_path(self) -> str | None:
         """The path of the currently open file, or None for untitled."""
         return self._current_path
+
+    @property
+    def ruff_on_save(self) -> bool:
+        """Whether ruff runs on save for Python files."""
+        return self._ruff_on_save
 
     @property
     def dirty(self) -> bool:
@@ -821,6 +836,18 @@ class EnhancedCodeEditor(ft.Column):
         self._lock_btn.tooltip = (
             "Unlock Editing (⌘L)" if read_only else "Toggle Read-Only (⌘L)"
         )
+        self.update()
+
+    def _toggle_ruff_on_save(self, _e) -> None:
+        self._ruff_on_save = not self._ruff_on_save
+        if self._ruff_on_save:
+            self._ruff_btn.icon = ft.Icons.AUTO_FIX_HIGH
+            self._ruff_btn.icon_color = None
+            self._ruff_btn.tooltip = "Ruff on Save: ON"
+        else:
+            self._ruff_btn.icon = ft.Icons.AUTO_FIX_OFF
+            self._ruff_btn.icon_color = ft.Colors.GREY_600
+            self._ruff_btn.tooltip = "Ruff on Save: OFF"
         self.update()
 
     # --- Font size ---
