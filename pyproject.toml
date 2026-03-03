@@ -29,5 +29,21 @@ dev = [
     "ruff>=0.15.4",
 ]
 
+[tool.ruff]
+select = ["E", "F", "I"]
+
+[tool.ruff.isort]
+known-first-party = ["fce_enhanced"]
+known-third-party = ["flet", "rich"]
+section-order = [
+    "future",
+    "standard-library",
+    "third-party",
+    "first-party",
+    "local-folder",
+]
+combine-as-imports = true
+force-sort-within-sections = true
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
