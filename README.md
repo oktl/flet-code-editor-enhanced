@@ -118,6 +118,7 @@ editor.search_bar      # the SearchReplaceBar control
 - **Go to Line** — Jump to a specific line number (Cmd+G / Ctrl+G)
 - **Read-Only Mode** — Toggle editing lock (Cmd+L / Ctrl+L)
 - **Font Size Controls** — Increase/decrease font size (Cmd+= / Cmd+-)
+- **Language Selector** — Choose syntax highlighting language from a searchable dialog; auto-detected on file open, and Save As defaults to the matching file extension
 - **Language Detection** — Automatic syntax highlighting for 40+ file extensions
 - **Dirty-File Tracking** — Visual indicator for unsaved changes
 - **Ruff on Save** — Auto-runs `ruff check --fix` and `ruff format` on Python files (requires ruff on PATH)

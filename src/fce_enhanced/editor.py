@@ -14,7 +14,7 @@ import flet_code_editor as fce
 from loguru import logger
 
 from fce_enhanced.file_dialog import open_file, save_file
-from fce_enhanced.languages import language_for_path
+from fce_enhanced.languages import extension_for_language, language_for_path
 from fce_enhanced.search import SearchReplaceBar
 from fce_enhanced.themes import DEFAULT_THEME, THEMES
 
@@ -125,6 +125,12 @@ class EnhancedCodeEditor(ft.Column):
         self._font_size_label = ft.Text(
             f"{self._font_size}px", size=11, color=ft.Colors.GREY_600
         )
+        self._lang_btn = ft.TextButton(
+            language.name.replace("_", " ").title(),
+            style=ft.ButtonStyle(text_style=ft.TextStyle(size=11)),
+            tooltip="Change Language",
+            on_click=self._handle_language_click,
+        )
 
         self._code_editor = fce.CodeEditor(
             language=language,
@@ -146,6 +152,11 @@ class EnhancedCodeEditor(ft.Column):
             replace_text=self._apply_replace_text,
             focus_editor=self._focus_editor,
             on_close=self._on_search_closed,
+        )
+
+        self.divder = ft.Container(
+            content=ft.VerticalDivider(width=1, color=ft.Colors.GREY_700),
+            height=APPBAR_HEIGHT - 4,
         )
 
         # --- Build layout ---
@@ -173,12 +184,7 @@ class EnhancedCodeEditor(ft.Column):
                     tooltip="Close File (⌘W) ",
                     on_click=self._handle_close,
                 ),
-                ft.IconButton(
-                    ft.Icons.PALETTE,
-                    icon_size=ICON_SIZE,
-                    tooltip="Choose Theme",
-                    on_click=self._handle_theme_click,
-                ),
+                self.divder,
                 ft.IconButton(
                     ft.Icons.SEARCH,
                     icon_size=ICON_SIZE,
@@ -191,8 +197,6 @@ class EnhancedCodeEditor(ft.Column):
                     tooltip="Go to Line (⌘G)",
                     on_click=self._handle_goto_line,
                 ),
-                self._lock_btn,
-                ft.VerticalDivider(width=1),
                 ft.IconButton(
                     ft.Icons.REMOVE,
                     icon_size=ICON_SIZE,
@@ -206,7 +210,18 @@ class EnhancedCodeEditor(ft.Column):
                     tooltip="Increase Font Size (⌘+)",
                     on_click=lambda _e: self._change_font_size(1),
                 ),
+                self.divder,
+                self._lock_btn,
+                ft.Container(expand=True),  # spacer to push right-side controls
+                self._lang_btn,
+                ft.IconButton(
+                    ft.Icons.PALETTE,
+                    icon_size=ICON_SIZE,
+                    tooltip="Choose Editor Theme",
+                    on_click=self._handle_theme_click,
+                ),
             ],
+            spacing=0,
         )
 
         controls.append(appbar)
@@ -372,6 +387,9 @@ class EnhancedCodeEditor(ft.Column):
         self._last_saved_content = content
         self._code_editor.value = content
         self._code_editor.language = language_for_path(path)
+        self._lang_btn.content = ft.Text(
+            self._language_display_name(self._code_editor.language), size=11
+        )
         self._mark_clean(content)
         await self._code_editor.focus()
         await asyncio.sleep(0.05)
@@ -475,9 +493,11 @@ class EnhancedCodeEditor(ft.Column):
 
     async def _do_save_as(self) -> bool:
         """Save As dialog. Returns True if saved, False if cancelled."""
-        default = (
-            Path(self._current_path).name if self._current_path else "untitled.txt"
-        )
+        if self._current_path:
+            default = Path(self._current_path).name
+        else:
+            ext = extension_for_language(self._code_editor.language)
+            default = f"untitled{ext}"
         path = await save_file("Save File", default)
         if path is None:
             return False
@@ -491,6 +511,9 @@ class EnhancedCodeEditor(ft.Column):
             return False
         self._current_path = path
         self._code_editor.language = language_for_path(path)
+        self._lang_btn.content = ft.Text(
+            self._language_display_name(self._code_editor.language), size=11
+        )
         self._mark_clean(content)
         await self._run_ruff(path)
         return True
@@ -516,6 +539,9 @@ class EnhancedCodeEditor(ft.Column):
         self._last_saved_content = DEFAULT_CODE
         self._save_btn.disabled = True
         self._code_editor.language = fce.CodeLanguage.PYTHON
+        self._lang_btn.content = ft.Text(
+            self._language_display_name(fce.CodeLanguage.PYTHON), size=11
+        )
         self._update_title()
         await asyncio.sleep(0.05)
         self._code_editor.value = DEFAULT_CODE
@@ -587,6 +613,90 @@ class EnhancedCodeEditor(ft.Column):
         self._code_editor.code_theme = theme
         if hasattr(self, "_theme_dlg") and self._theme_dlg is not None:
             self._theme_dlg.open = False
+        self.page.update()
+        self.update()
+
+    # --- Language selection ---
+
+    @staticmethod
+    def _language_display_name(lang: fce.CodeLanguage) -> str:
+        return lang.name.replace("_", " ").title()
+
+    def _handle_language_click(self, _e):
+        self._show_language_dialog()
+
+    def _show_language_dialog(self):
+        languages = {
+            self._language_display_name(lang): lang
+            for lang in sorted(fce.CodeLanguage, key=lambda lg: lg.name)
+        }
+        lang_list = ft.ListView(
+            height=300,
+            controls=self._build_language_tiles(languages),
+        )
+
+        def close(_e):
+            self._lang_dlg.open = False
+            self.page.update()
+
+        self._lang_dlg = ft.AlertDialog(
+            title=ft.Text("Choose Language"),
+            content=ft.Column(
+                [
+                    ft.TextField(
+                        hint_text="Search languages...",
+                        prefix_icon=ft.Icons.SEARCH,
+                        on_change=lambda e: self._filter_language_list(
+                            e.control.value, lang_list, languages
+                        ),
+                        autofocus=True,
+                    ),
+                    lang_list,
+                ],
+                tight=True,
+                width=350,
+            ),
+            actions=[ft.TextButton("Close", on_click=close)],
+            actions_alignment=ft.MainAxisAlignment.END,
+            on_dismiss=close,
+        )
+
+        self.page.overlay.append(self._lang_dlg)
+        self._lang_dlg.open = True
+        self.page.update()
+
+    def _build_language_tiles(
+        self, languages: dict[str, fce.CodeLanguage]
+    ) -> list[ft.ListTile]:
+        tiles = []
+        for display_name, lang_val in languages.items():
+            is_current = lang_val == self._code_editor.language
+            tiles.append(
+                ft.ListTile(
+                    leading=ft.Icon(ft.Icons.CHECK, visible=is_current),
+                    title=ft.Text(display_name, size=14),
+                    on_click=lambda _e, lg=lang_val: self._select_language(lg),
+                )
+            )
+        return tiles
+
+    def _filter_language_list(
+        self,
+        query: str,
+        lang_list: ft.ListView,
+        languages: dict[str, fce.CodeLanguage],
+    ):
+        q = (query or "").lower()
+        filtered = {k: v for k, v in languages.items() if q in k.lower()}
+        lang_list.controls = self._build_language_tiles(filtered)
+        self.page.update()
+
+    def _select_language(self, lang: fce.CodeLanguage):
+        self._code_editor.language = lang
+        self._lang_btn.content = ft.Text(self._language_display_name(lang), size=11)
+        self._update_status_bar()
+        if hasattr(self, "_lang_dlg") and self._lang_dlg is not None:
+            self._lang_dlg.open = False
         self.page.update()
         self.update()
 
@@ -881,18 +991,23 @@ class EnhancedCodeEditor(ft.Column):
         lines = text.split("\n")
         return sum(len(lines[i]) + 1 for i in range(min(line - 1, len(lines))))
 
-    def _handle_selection_change(self, e: ft.TextSelectionChangeEvent[fce.CodeEditor]):
-        caret_offset = e.selection.end
-        selected_text = e.selected_text or ""
-        content = self._code_editor.value or ""
-        line, col = self._offset_to_line_col(content, caret_offset)
+    def _update_status_bar(
+        self, *, line: int = 1, col: int = 1, selected_text: str = ""
+    ) -> None:
         lang = (
-            self._code_editor.language.name.replace("_", " ").title()
+            self._language_display_name(self._code_editor.language)
             if self._code_editor.language
             else "Plain Text"
         )
         sel_info = f" | {len(selected_text)} chars selected" if selected_text else ""
         self._status_bar.value = f"Ln {line}, Col {col} | {lang}{sel_info}"
+
+    def _handle_selection_change(self, e: ft.TextSelectionChangeEvent[fce.CodeEditor]):
+        caret_offset = e.selection.end
+        selected_text = e.selected_text or ""
+        content = self._code_editor.value or ""
+        line, col = self._offset_to_line_col(content, caret_offset)
+        self._update_status_bar(line=line, col=col, selected_text=selected_text)
         self.update()
 
     def _handle_change(self, _e):
