@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import contextlib
 import difflib
 
 import flet as ft
@@ -139,10 +140,8 @@ class DiffPane(ft.Column):
 
     def _safe_update(self) -> None:
         """Call self.update() only if mounted."""
-        try:
+        with contextlib.suppress(RuntimeError):
             self.update()
-        except RuntimeError:
-            pass
 
 
 def compute_unified_diff(original: str, current: str) -> tuple[str, int, int]:

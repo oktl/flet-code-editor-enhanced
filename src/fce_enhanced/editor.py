@@ -7,6 +7,7 @@ ruff on-save toggle, language and theme selectors, command palette, and help.
 """
 
 import asyncio
+import contextlib
 from pathlib import Path
 import platform
 import shutil
@@ -426,10 +427,8 @@ class EnhancedCodeEditor(ft.Column):
         await self._code_editor.focus()
         await asyncio.sleep(0.05)
         self._code_editor.selection = ft.TextSelection(base_offset=0, extent_offset=0)
-        try:
+        with contextlib.suppress(RuntimeError):
             self._code_editor.update()
-        except RuntimeError:
-            pass
 
     def _show_snackbar(self, message: str, *, is_error: bool = False) -> None:
         """Show a message to the user via a SnackBar with a dismiss button."""
@@ -701,16 +700,12 @@ class EnhancedCodeEditor(ft.Column):
         self._code_editor.selection = ft.TextSelection(
             base_offset=base, extent_offset=extent
         )
-        try:
+        with contextlib.suppress(RuntimeError):
             self._code_editor.update()
-        except RuntimeError:
-            pass
 
     def _focus_editor(self) -> None:
-        try:
+        with contextlib.suppress(RuntimeError):
             asyncio.ensure_future(self._code_editor.focus())
-        except RuntimeError:
-            pass
 
     def _apply_replace_text(self, new_text: str) -> None:
         self._code_editor.value = new_text
@@ -759,10 +754,8 @@ class EnhancedCodeEditor(ft.Column):
             self._code_editor.selection = ft.TextSelection(
                 base_offset=offset, extent_offset=offset
             )
-            try:
+            with contextlib.suppress(RuntimeError):
                 self._code_editor.update()
-            except RuntimeError:
-                pass
             await self._code_editor.focus()
 
     # --- Keyboard shortcuts ---

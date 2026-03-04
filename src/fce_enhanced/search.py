@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import contextlib
 import re
 
 import flet as ft
@@ -238,9 +239,7 @@ class SearchReplaceBar(ft.Column):
     def _update_match_display(self) -> None:
         """Update the match count label and highlight current match."""
         count = len(self._match_positions)
-        if not self._search_query:
-            self._match_count_label.value = "No results"
-        elif count == 0:
+        if not self._search_query or count == 0:
             self._match_count_label.value = "No results"
         else:
             self._match_count_label.value = (
@@ -262,10 +261,8 @@ class SearchReplaceBar(ft.Column):
 
     def _safe_update(self) -> None:
         """Call self.update() only if the control is mounted on a page."""
-        try:
+        with contextlib.suppress(RuntimeError):
             self.update()
-        except RuntimeError:
-            pass
 
     def _handle_search_change(self, e) -> None:
         self._search_query = e.control.value or ""
