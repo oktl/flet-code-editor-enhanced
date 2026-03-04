@@ -8,10 +8,11 @@ Built on top of [`flet-code-editor`](https://pypi.org/project/flet-code-editor/)
 
 ```bash
 git clone https://github.com/oktl/flet-fce-enhanced.git
-or GitHub CLI: 
-    gh repo clone oktl/flet-fce-enhanced
-cd fce-enhanced
+# or GitHub CLI: 
+gh repo clone oktl/flet-fce-enhanced
+cd flet-fce-enhanced
 uv sync
+source .venv/bin/activate
 pre-commit install  # optional, for development
 ```
 
