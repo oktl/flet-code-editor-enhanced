@@ -36,9 +36,11 @@ HELP_TEXT = """\
 
 ## Search & Replace
 
-Open with ⌘F (find) or ⌥⌘F (find & replace) on Mac, Ctrl+H on Windows/Linux. Use the **Aa** button to toggle
-case sensitivity. Navigate matches with the arrow buttons or press Enter.
-Press Escape to close the search bar.
+- Open with ⌘F (find) or ⌥⌘F (find & replace) on Mac, Ctrl+H on Windows/Linux.
+- Use the **Aa** button to toggle case sensitivity.
+- Use the **ABC** button to toggle whole word matching.
+- Navigate matches with the arrow buttons or press Enter.
+- Press Escape to close the search bar.
 
 ## Ruff Integration
 
