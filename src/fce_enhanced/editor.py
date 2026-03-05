@@ -3,7 +3,11 @@
 Built on the CodeEditor control from Flet docs
 https://docs.flet.dev/codeeditor/ with a full-featured toolbar including
 file operations, find/replace, go-to-line, font sizing, read-only toggle,
-ruff on-save toggle, language and theme selectors, command palette, and help.
+ruff on-save toggle, diff view on toggle,language and theme selectors, command palette, and help.
+
+UI dialogs (theme/language pickers, go-to-line, command palette, confirm-discard,
+and help) are defined in ``dialogs.py`` and invoked from here.  A toggleable
+unified diff view is provided by ``DiffPane`` from ``diff_pane.py``.
 """
 
 import asyncio
@@ -47,7 +51,10 @@ class EnhancedCodeEditor(ft.Column):
 
     Toolbar buttons: Open, Save, Save As, Close, Find, Go to Line, Font Size
     +/-, Read-Only toggle, Ruff On/Off toggle, Language selector, Theme
-    selector, and Help.
+    selector, and Help.  Dialogs (theme/language pickers, go-to-line,
+    command palette, confirm-discard, and help) are delegated to ``dialogs.py``.
+    A toggleable unified diff view is provided by ``DiffPane`` from
+    ``diff_pane.py``.
 
     Keyboard shortcuts (Cmd/Ctrl unless noted):
         O/S/Shift+S/W — file ops | F — find | Option+F / Ctrl+H — replace |
