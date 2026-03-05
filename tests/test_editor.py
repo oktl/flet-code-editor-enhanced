@@ -901,13 +901,13 @@ def test_toggle_ruff_on_save():
         editor._toggle_ruff_on_save(None)
         assert editor._ruff_on_save is False
         assert editor._ruff_btn.icon == ft.Icons.AUTO_FIX_OFF
-        assert editor._ruff_btn.icon_color == ft.Colors.GREY_600
+        assert editor._ruff_btn.icon_color is None
         assert "OFF" in editor._ruff_btn.tooltip
 
         editor._toggle_ruff_on_save(None)
         assert editor._ruff_on_save is True
         assert editor._ruff_btn.icon == ft.Icons.AUTO_FIX_HIGH
-        assert editor._ruff_btn.icon_color is None
+        assert editor._ruff_btn.icon_color == ft.Colors.BLUE
         assert "ON" in editor._ruff_btn.tooltip
     finally:
         _cleanup_patches(p1, p2, p3)

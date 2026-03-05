@@ -44,6 +44,7 @@ ICON_SIZE = 18
 DEFAULT_FONT_SIZE = 13
 MIN_FONT_SIZE = 8
 MAX_FONT_SIZE = 32
+TOGGLE_ACTIVE_COLOR = ft.Colors.BLUE
 
 
 class EnhancedCodeEditor(ft.Column):
@@ -152,7 +153,7 @@ class EnhancedCodeEditor(ft.Column):
         self._ruff_btn = ft.IconButton(
             ft.Icons.AUTO_FIX_HIGH if self._ruff_on_save else ft.Icons.AUTO_FIX_OFF,
             icon_size=ICON_SIZE,
-            icon_color=None if self._ruff_on_save else ft.Colors.GREY_600,
+            icon_color=TOGGLE_ACTIVE_COLOR if self._ruff_on_save else None,
             tooltip="Ruff on Save: ON" if self._ruff_on_save else "Ruff on Save: OFF",
             on_click=self._toggle_ruff_on_save,
         )
@@ -204,8 +205,12 @@ class EnhancedCodeEditor(ft.Column):
         )
 
         self.appbar_divder = ft.Container(
-            content=ft.VerticalDivider(width=1, color=ft.Colors.GREY_600),
-            height=APPBAR_HEIGHT - 4,
+            content=ft.VerticalDivider(
+                width=1,
+                thickness=2,
+                color=ft.Colors.GREY_600,
+            ),
+            height=APPBAR_HEIGHT - 2,
         )
 
         # --- Build layout ---
@@ -240,7 +245,6 @@ class EnhancedCodeEditor(ft.Column):
                     tooltip="Find (⌘F)",
                     on_click=self._handle_find_click,
                 ),
-                self._diff_btn,
                 ft.IconButton(
                     ft.Icons.FORMAT_LIST_NUMBERED,
                     icon_size=ICON_SIZE,
@@ -261,6 +265,7 @@ class EnhancedCodeEditor(ft.Column):
                     on_click=lambda _e: self._change_font_size(1),
                 ),
                 self.appbar_divder,
+                self._diff_btn,
                 self._lock_btn,
                 self._ruff_btn,
                 ft.Container(expand=True),  # spacer to push right-side controls
@@ -661,6 +666,7 @@ class EnhancedCodeEditor(ft.Column):
         read_only = not self._code_editor.read_only
         self._code_editor.read_only = read_only
         self._lock_btn.icon = ft.Icons.LOCK if read_only else ft.Icons.LOCK_OPEN
+        self._lock_btn.icon_color = TOGGLE_ACTIVE_COLOR if read_only else None
         self._lock_btn.tooltip = (
             "Unlock Editing (⌘L)" if read_only else "Toggle Read-Only (⌘L)"
         )
@@ -670,11 +676,11 @@ class EnhancedCodeEditor(ft.Column):
         self._ruff_on_save = not self._ruff_on_save
         if self._ruff_on_save:
             self._ruff_btn.icon = ft.Icons.AUTO_FIX_HIGH
-            self._ruff_btn.icon_color = None
+            self._ruff_btn.icon_color = TOGGLE_ACTIVE_COLOR
             self._ruff_btn.tooltip = "Ruff on Save: ON"
         else:
             self._ruff_btn.icon = ft.Icons.AUTO_FIX_OFF
-            self._ruff_btn.icon_color = ft.Colors.GREY_600
+            self._ruff_btn.icon_color = None
             self._ruff_btn.tooltip = "Ruff on Save: OFF"
         self.update()
 
@@ -740,7 +746,9 @@ class EnhancedCodeEditor(ft.Column):
             self._diff_pane.close()
         else:
             self._diff_pane.open()
-        self._diff_btn.icon_color = ft.Colors.BLUE if self._diff_pane.is_open else None
+        self._diff_btn.icon_color = (
+            TOGGLE_ACTIVE_COLOR if self._diff_pane.is_open else None
+        )
         self.page.update()
 
     def _on_diff_closed(self) -> None:
