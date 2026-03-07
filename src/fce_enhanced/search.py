@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import contextlib
+from contextlib import suppress
 import re
 
 import flet as ft
 
+SEARCH_ICON_SIZE = 18
 SEARCH_BUTTON_STYLE = ft.ButtonStyle(text_style=ft.TextStyle(size=10))
 
 
@@ -69,7 +70,7 @@ class SearchReplaceBar(ft.Column):
         self._case_btn = ft.IconButton(
             icon=ft.Icons.FORMAT_SIZE,
             tooltip="Match Case",
-            icon_size=16,
+            icon_size=SEARCH_ICON_SIZE,
             selected=False,
             on_click=self._handle_toggle_case,
         )
@@ -77,7 +78,7 @@ class SearchReplaceBar(ft.Column):
         self._whole_word_btn = ft.IconButton(
             icon=ft.Icons.ABC,
             tooltip="Whole Word",
-            icon_size=20,
+            icon_size=18,
             selected=False,
             on_click=self._handle_toggle_whole_word,
         )
@@ -96,7 +97,7 @@ class SearchReplaceBar(ft.Column):
         self._replace_toggle_btn = ft.IconButton(
             icon=ft.Icons.EXPAND_MORE,
             tooltip="Toggle Replace",
-            icon_size=16,
+            icon_size=SEARCH_ICON_SIZE,
             on_click=self._handle_toggle_replace,
         )
 
@@ -130,19 +131,19 @@ class SearchReplaceBar(ft.Column):
                 ft.IconButton(
                     icon=ft.Icons.ARROW_UPWARD,
                     tooltip="Previous Match",
-                    icon_size=16,
+                    icon_size=SEARCH_ICON_SIZE,
                     on_click=self._handle_prev,
                 ),
                 ft.IconButton(
                     icon=ft.Icons.ARROW_DOWNWARD,
                     tooltip="Next Match",
-                    icon_size=16,
+                    icon_size=SEARCH_ICON_SIZE,
                     on_click=self._handle_next,
                 ),
                 ft.IconButton(
                     icon=ft.Icons.CLOSE,
                     tooltip="Close (Escape)",
-                    icon_size=16,
+                    icon_size=SEARCH_ICON_SIZE,
                     on_click=lambda _: self.close(),
                 ),
             ],
@@ -261,7 +262,7 @@ class SearchReplaceBar(ft.Column):
 
     def _safe_update(self) -> None:
         """Call self.update() only if the control is mounted on a page."""
-        with contextlib.suppress(RuntimeError):
+        with suppress(RuntimeError):
             self.update()
 
     def _handle_search_change(self, e) -> None:

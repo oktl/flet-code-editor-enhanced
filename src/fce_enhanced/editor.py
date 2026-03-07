@@ -11,7 +11,7 @@ unified diff view is provided by ``DiffPane`` from ``diff_pane.py``.
 """
 
 import asyncio
-import contextlib
+from contextlib import suppress
 from pathlib import Path
 import platform
 import shutil
@@ -439,7 +439,7 @@ class EnhancedCodeEditor(ft.Column):
         await self._code_editor.focus()
         await asyncio.sleep(0.05)
         self._code_editor.selection = ft.TextSelection(base_offset=0, extent_offset=0)
-        with contextlib.suppress(RuntimeError):
+        with suppress(RuntimeError):
             self._code_editor.update()
 
     def _show_snackbar(self, message: str, *, is_error: bool = False) -> None:
@@ -713,11 +713,11 @@ class EnhancedCodeEditor(ft.Column):
         self._code_editor.selection = ft.TextSelection(
             base_offset=base, extent_offset=extent
         )
-        with contextlib.suppress(RuntimeError):
+        with suppress(RuntimeError):
             self._code_editor.update()
 
     def _focus_editor(self) -> None:
-        with contextlib.suppress(RuntimeError):
+        with suppress(RuntimeError):
             asyncio.ensure_future(self._code_editor.focus())
 
     def _apply_replace_text(self, new_text: str) -> None:
@@ -769,7 +769,7 @@ class EnhancedCodeEditor(ft.Column):
             self._code_editor.selection = ft.TextSelection(
                 base_offset=offset, extent_offset=offset
             )
-            with contextlib.suppress(RuntimeError):
+            with suppress(RuntimeError):
                 self._code_editor.update()
             await self._code_editor.focus()
 

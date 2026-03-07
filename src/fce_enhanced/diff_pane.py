@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import contextlib
+from contextlib import suppress
 import difflib
 
 import flet as ft
@@ -11,7 +11,7 @@ import flet_code_editor as fce
 
 from fce_enhanced.themes import DEFAULT_THEME
 
-ICON_SIZE = 16
+ICON_SIZE = 18
 
 
 class DiffPane(ft.Column):
@@ -140,7 +140,7 @@ class DiffPane(ft.Column):
 
     def _safe_update(self) -> None:
         """Call self.update() only if mounted."""
-        with contextlib.suppress(RuntimeError):
+        with suppress(RuntimeError):
             self.update()
 
 
