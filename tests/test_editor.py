@@ -51,7 +51,7 @@ def test_default_value():
 
 def test_default_language():
     editor = _make_editor()
-    assert editor.language == fce.CodeLanguage.PYTHON
+    assert editor.language == fce.CodeLanguage.PLAINTEXT
 
 
 def test_default_not_dirty():
@@ -1171,7 +1171,7 @@ def test_line_to_offset_third_line():
 def test_update_status_bar_default():
     editor = _make_editor()
     editor._update_status_bar()
-    assert editor._status_bar.value == "Ln 1, Col 1 | Python"
+    assert editor._status_bar.value == "Ln 1, Col 1 | Plaintext"
 
 
 def test_update_status_bar_with_position():
