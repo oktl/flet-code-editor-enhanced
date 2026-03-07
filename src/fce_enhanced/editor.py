@@ -861,7 +861,6 @@ class EnhancedCodeEditor(ft.Column):
 
         if self._search_bar.is_open:
             self._search_bar.recompute()
-            self._search_bar._safe_update()
 
         if self._diff_pane.is_open:
             self._diff_pane.recompute()

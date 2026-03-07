@@ -200,6 +200,7 @@ class SearchReplaceBar(ft.Column):
         """Recompute matches against current editor content. Call when text changes."""
         self._compute_matches()
         self._update_match_display()
+        self._safe_update()
 
     # --- Core logic ---
 
@@ -268,7 +269,6 @@ class SearchReplaceBar(ft.Column):
     def _handle_search_change(self, e) -> None:
         self._search_query = e.control.value or ""
         self.recompute()
-        self._safe_update()
 
     def _handle_next(self, _e) -> None:
         self._go_to_match(1)
@@ -287,14 +287,12 @@ class SearchReplaceBar(ft.Column):
         self._case_btn.selected = self._case_sensitive
         self._case_btn.icon_color = ft.Colors.BLUE if self._case_sensitive else None
         self.recompute()
-        self._safe_update()
 
     def _handle_toggle_whole_word(self, _e) -> None:
         self._whole_word = not self._whole_word
         self._whole_word_btn.selected = self._whole_word
         self._whole_word_btn.icon_color = ft.Colors.BLUE if self._whole_word else None
         self.recompute()
-        self._safe_update()
 
     def _handle_toggle_replace(self, _e) -> None:
         self._replace_visible = not self._replace_visible
