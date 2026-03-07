@@ -47,6 +47,7 @@ class SearchReplaceBar(ft.Column):
         self._whole_word: bool = False
         self._match_positions: list[tuple[int, int]] = []  # (start, end)
         self._current_match_index: int = -1
+        self._navigated: bool = False
         self._replace_visible: bool = False
 
         # --- UI elements ---
@@ -268,16 +269,25 @@ class SearchReplaceBar(ft.Column):
 
     def _handle_search_change(self, e) -> None:
         self._search_query = e.control.value or ""
+        self._navigated = False
         self.recompute()
 
     def _handle_next(self, _e) -> None:
-        self._go_to_match(1)
+        if self._navigated:
+            self._go_to_match(1)
+        else:
+            self._navigated = True
+            self._update_match_display()
         if self._focus_editor:
             self._focus_editor()
         self._safe_update()
 
     def _handle_prev(self, _e) -> None:
-        self._go_to_match(-1)
+        if self._navigated:
+            self._go_to_match(-1)
+        else:
+            self._navigated = True
+            self._update_match_display()
         if self._focus_editor:
             self._focus_editor()
         self._safe_update()
