@@ -886,6 +886,8 @@ class EnhancedCodeEditor(ft.Column):
 async def main(page: ft.Page):
     """Flet main entry point — standalone demo of the EnhancedCodeEditor."""
     page.title = "CodeEditor"
+    page.window.width = 800
+    page.window.height = 1200
 
     def _on_title_change(display, name, is_dirty):
         page.title = f"{name}{'*' if is_dirty else ''} — CodeEditor"
