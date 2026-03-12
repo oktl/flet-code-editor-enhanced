@@ -38,10 +38,10 @@ pre-commit install  # optional, for development
 ### Run as a standalone app
 
 ```bash
-fce-enhanced
+uvx fce-enhanced
 ```
 
-Or during development:
+During development:
 
 ```bash
 flet run src/fce_enhanced/editor.py
