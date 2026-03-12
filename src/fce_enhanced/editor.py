@@ -59,7 +59,7 @@ class EnhancedCodeEditor(ft.Column):
 
     Keyboard shortcuts (Cmd/Ctrl unless noted):
         O/S/Shift+S/W — file ops | F — find | Option+F / Ctrl+H — replace |
-        G — go to line | L — read-only toggle | Shift+L — language |
+        G — go to line | L — read-only toggle | Shift+L — language | Shift+G — gutter |
         +/- — font size | Shift+P — command palette | F1 — help | Esc — close search
 
     Args:
@@ -67,6 +67,7 @@ class EnhancedCodeEditor(ft.Column):
         value: Initial editor content.
         show_toolbar: Whether to show the file I/O toolbar.
         show_status_bar: Whether to show the line/column status bar.
+        show_gutter: Whether to initially show the line-number gutter.
         register_keyboard_shortcuts: Whether to register global keyboard shortcuts.
         autocomplete: Whether to enable autocomplete.
         autocomplete_words: List of words for autocomplete suggestions.
@@ -85,6 +86,7 @@ class EnhancedCodeEditor(ft.Column):
         value: str = DEFAULT_CODE,
         show_toolbar: bool = True,
         show_status_bar: bool = True,
+        show_gutter: bool = True,
         register_keyboard_shortcuts: bool = True,
         autocomplete: bool = True,
         autocomplete_words: list[str] | None = None,
@@ -107,6 +109,7 @@ class EnhancedCodeEditor(ft.Column):
         self._dirty: bool = False
         self._loading: bool = False
         self._last_saved_content: str = value
+        self._show_gutter: bool = show_gutter
 
         # --- Defaults ---
         if code_theme is None:
@@ -131,6 +134,16 @@ class EnhancedCodeEditor(ft.Column):
                 show_folding_handles=True,
                 width=80,
             )
+        self._gutter_style = gutter_style
+        self._hidden_gutter_style = fce.GutterStyle(
+            show_line_numbers=False,
+            show_folding_handles=False,
+            show_errors=False,
+            width=0,
+            margin=0,
+        )
+        if not show_gutter:
+            gutter_style = self._hidden_gutter_style
 
         # --- UI elements ---
         self._title_bar = ft.Text("untitled", size=12, color=ft.Colors.GREY_600)
@@ -157,6 +170,15 @@ class EnhancedCodeEditor(ft.Column):
             icon_color=TOGGLE_ACTIVE_COLOR if self._ruff_on_save else None,
             tooltip="Ruff on Save: ON" if self._ruff_on_save else "Ruff on Save: OFF",
             on_click=self._toggle_ruff_on_save,
+        )
+        self._gutter_btn = ft.IconButton(
+            ft.Icons.FORMAT_LIST_NUMBERED_RTL
+            if self._show_gutter
+            else ft.Icons.FORMAT_LIST_NUMBERED_RTL,
+            icon_size=ICON_SIZE,
+            icon_color=TOGGLE_ACTIVE_COLOR if self._show_gutter else None,
+            tooltip="Hide Gutter (⇧⌘G)" if self._show_gutter else "Show Gutter (⇧⌘G)",
+            on_click=lambda _e: self._toggle_gutter(),
         )
         self._font_size_label = ft.Text(
             f"{self._font_size}px", size=11, color=ft.Colors.GREY_600
@@ -269,6 +291,7 @@ class EnhancedCodeEditor(ft.Column):
                 self._diff_btn,
                 self._lock_btn,
                 self._ruff_btn,
+                self._gutter_btn,
                 ft.Container(expand=True),  # spacer to push right-side controls
                 self._lang_btn,
                 ft.IconButton(
@@ -672,6 +695,7 @@ class EnhancedCodeEditor(ft.Column):
             ("Choose Theme", "", self._handle_theme_click),
             ("Choose Language", f"{shift_mod}L", self._handle_language_click),
             ("Toggle Read-Only", f"{mod}L", lambda _: self._toggle_read_only()),
+            ("Toggle Gutter", f"{shift_mod}G", lambda _: self._toggle_gutter()),
             ("Increase Font Size", f"{mod}+", lambda _: self._change_font_size(1)),
             ("Decrease Font Size", f"{mod}-", lambda _: self._change_font_size(-1)),
             ("Help", "F1", lambda _: self._show_help()),
@@ -700,6 +724,21 @@ class EnhancedCodeEditor(ft.Column):
             self._ruff_btn.icon = ft.Icons.AUTO_FIX_OFF
             self._ruff_btn.icon_color = None
             self._ruff_btn.tooltip = "Ruff on Save: OFF"
+        self.update()
+
+    # --- Gutter toggle ---
+
+    def _toggle_gutter(self) -> None:
+        self._show_gutter = not self._show_gutter
+        self._code_editor.gutter_style = (
+            self._gutter_style if self._show_gutter else self._hidden_gutter_style
+        )
+        self._gutter_btn.icon_color = TOGGLE_ACTIVE_COLOR if self._show_gutter else None
+        self._gutter_btn.tooltip = (
+            "Hide Gutter (\u21e7\u2318G)"
+            if self._show_gutter
+            else "Show Gutter (\u21e7\u2318G)"
+        )
         self.update()
 
     # --- Help ---
@@ -823,6 +862,8 @@ class EnhancedCodeEditor(ft.Column):
             self._handle_language_click(None)
         elif key == "L":
             self._toggle_read_only()
+        elif key == "G" and e.shift:
+            self._toggle_gutter()
         elif key == "G":
             await self._handle_goto_line(None)
         elif key == "EQUAL" or key == "+" or key == "=":

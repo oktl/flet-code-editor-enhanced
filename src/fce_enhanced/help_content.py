@@ -15,6 +15,7 @@ HELP_TEXT = """\
 | Command Palette | ⇧⌘P | Ctrl+Shift+P |
 | Toggle Read-Only | ⌘L | Ctrl+L |
 | Toggle Diff | ⌘D | Ctrl+D |
+| Toggle Gutter | ⇧⌘G | Ctrl+Shift+G |
 | Change Language | ⇧⌘L | Ctrl+Shift+L |
 | Increase Font Size | ⌘+ | Ctrl++ |
 | Decrease Font Size | ⌘- | Ctrl+- |
@@ -30,6 +31,7 @@ HELP_TEXT = """\
 - **Font Size** — increase or decrease editor font size
 - **Read-Only Lock** — toggle read-only mode
 - **Ruff** — toggle automatic ruff check + format on save (Python files only)
+- **Gutter** — toggle the line-number gutter
 - **Language** — change syntax highlighting language
 - **Theme** — choose from 89 editor color themes
 - **Help** — open this dialog

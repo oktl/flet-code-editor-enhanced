@@ -104,6 +104,7 @@ ft.run(main)
 | `value`                       | `str`          | `"# New file\n"` | Initial editor content                     |
 | `show_toolbar`                | `bool`         | `True`           | Show the file I/O toolbar                  |
 | `show_status_bar`             | `bool`         | `True`           | Show the line/column status bar            |
+| `show_gutter`                 | `bool`         | `True`           | Show the line-number gutter                |
 | `register_keyboard_shortcuts` | `bool`         | `True`           | Register global keyboard shortcuts         |
 | `autocomplete`                | `bool`         | `True`           | Enable autocomplete                        |
 | `autocomplete_words`          | `list[str]`    | `None`           | Custom autocomplete suggestions            |
@@ -140,6 +141,7 @@ editor.search_bar      # the SearchReplaceBar control
 - **Language Detection** — Automatic syntax highlighting for 40+ file extensions
 - **Dirty-File Tracking** — Visual indicator for unsaved changes
 - **Diff Pane** — Toggleable unified diff view showing changes since last save, with green/red syntax coloring (Cmd+D / Ctrl+D)
+- **Gutter Toggle** — Show or hide the line-number gutter (Shift+Cmd+G / Ctrl+Shift+G)
 - **Ruff on Save** — Auto-runs `ruff check --fix` and `ruff format` on Python files (requires ruff on PATH); toggleable from the toolbar
 - **Status Bar** — Line, column, language, and selection info
 
@@ -154,6 +156,7 @@ editor.search_bar      # the SearchReplaceBar control
 | Find               | ⌘F    | Ctrl+F          |
 | Find and Replace   | ⌥⌘F   | Ctrl+H          |
 | Toggle Diff        | ⌘D    | Ctrl+D          |
+| Toggle Gutter      | ⇧⌘G   | Ctrl+Shift+G    |
 | Go to Line         | ⌘G    | Ctrl+G          |
 | Toggle Read-Only   | ⌘L    | Ctrl+L          |
 | Increase Font Size | ⌘+    | Ctrl++          |
