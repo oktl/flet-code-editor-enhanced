@@ -111,6 +111,7 @@ class EnhancedCodeEditor(ft.Column):
         self._loading: bool = False
         self._last_saved_content: str = value
         self._show_gutter: bool = show_gutter
+        self._current_snackbar: ft.SnackBar | None = None
 
         # --- Defaults ---
         if code_theme is None:
@@ -492,17 +493,27 @@ class EnhancedCodeEditor(ft.Column):
         )
         self._code_editor.selection = ft.TextSelection(base_offset=0, extent_offset=0)
         self._loading = False
+        self._set_ruff_on_save(path.endswith(".py"))
         self._mark_clean(content)
         await self._code_editor.focus()
 
+    def _dismiss_snackbar(self) -> None:
+        """Close the current snackbar if one is open."""
+        if self._current_snackbar is not None and self._current_snackbar.open:
+            self._current_snackbar.open = False
+            self.page.update()
+
     def _show_snackbar(self, message: str, *, is_error: bool = False) -> None:
         """Show a message to the user via a SnackBar with a dismiss button."""
+        if self._current_snackbar is not None and self._current_snackbar.open:
+            self._current_snackbar.open = False
         snack = ft.SnackBar(
             ft.Text(message, color=ft.Colors.WHITE, selectable=True),
             bgcolor=ft.Colors.RED_800 if is_error else ft.Colors.GREY_800,
             action="Dismiss",
             duration=86400000,  # effectively permanent until dismissed
         )
+        self._current_snackbar = snack
         self.page.overlay.append(snack)
         snack.open = True
         self.page.update()
@@ -583,6 +594,7 @@ class EnhancedCodeEditor(ft.Column):
             logger.error("Failed to save {}: {}", self._current_path, exc)
             self._show_snackbar(f"Save failed: {exc}", is_error=True)
             return False
+        self._dismiss_snackbar()
         self._mark_clean(content)
         await self._run_ruff(self._current_path)
         return True
@@ -605,11 +617,13 @@ class EnhancedCodeEditor(ft.Column):
             logger.error("Failed to save {}: {}", path, exc)
             self._show_snackbar(f"Save failed: {exc}", is_error=True)
             return False
+        self._dismiss_snackbar()
         self._current_path = path
         self._code_editor.language = language_for_path(path)
         self._lang_btn.content = ft.Text(
             self._language_display_name(self._code_editor.language), size=11
         )
+        self._set_ruff_on_save(path.endswith(".py"))
         self._mark_clean(content)
         await self._run_ruff(path)
         return True
@@ -637,6 +651,7 @@ class EnhancedCodeEditor(ft.Column):
         self._dirty = False
         self._last_saved_content = DEFAULT_CODE
         self._save_btn.disabled = True
+        self._set_ruff_on_save(False)
         self._code_editor.language = fce.CodeLanguage.PYTHON
         self._lang_btn.content = ft.Text(
             self._language_display_name(fce.CodeLanguage.PYTHON), size=11
@@ -756,9 +771,10 @@ class EnhancedCodeEditor(ft.Column):
         )
         self.update()
 
-    def _toggle_ruff_on_save(self, _e) -> None:
-        self._ruff_on_save = not self._ruff_on_save
-        if self._ruff_on_save:
+    def _set_ruff_on_save(self, enabled: bool) -> None:
+        """Update ruff-on-save state and button appearance."""
+        self._ruff_on_save = enabled
+        if enabled:
             self._ruff_btn.icon = ft.Icons.AUTO_FIX_HIGH
             self._ruff_btn.icon_color = TOGGLE_ACTIVE_COLOR
             self._ruff_btn.tooltip = "Ruff on Save: ON"
@@ -766,6 +782,9 @@ class EnhancedCodeEditor(ft.Column):
             self._ruff_btn.icon = ft.Icons.AUTO_FIX_OFF
             self._ruff_btn.icon_color = None
             self._ruff_btn.tooltip = "Ruff on Save: OFF"
+
+    def _toggle_ruff_on_save(self, _e) -> None:
+        self._set_ruff_on_save(not self._ruff_on_save)
         self.update()
 
     # --- Gutter toggle ---

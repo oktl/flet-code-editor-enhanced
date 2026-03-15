@@ -47,9 +47,12 @@ HELP_TEXT = """\
 
 ## Ruff Integration
 
-When enabled, saving a Python file automatically runs `ruff check --fix`
-followed by `ruff format`. Remaining lint warnings are shown in a snackbar.
-Requires [ruff](https://docs.astral.sh/ruff/) to be installed.
+Ruff on Save is automatically enabled when you open or save-as a `.py` file,
+and disabled when you close the file. You can also toggle it manually with the
+toolbar button. When enabled, saving a Python file automatically runs
+`ruff check --fix` followed by `ruff format`. Remaining lint warnings are
+shown in a snackbar. Requires [ruff](https://docs.astral.sh/ruff/) to be
+installed.
 
 ## Command Palette
 
