@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.1.6] - 2026-03-17
+
+### Fix
+
+Flet 0.80+ API violations: async handlers and dialog/snackbar management
+
+Replace pre-0.80 patterns with correct Flet 0.81 APIs:
+
+- Add sync click wrappers using page.run_task() for all async on_click/on_keyboard_event handlers
+- Migrate page.overlay.append/remove to page.show_dialog()/page.pop_dialog()
+- Migrate dialog.open = True/False to show_dialog/pop_dialog
+- Fix async on_tap_link handler in help dialog to sync wrapper
+- Update test mocks and assertions for new API
+
 ## [0.1.5] - 2026-03-15
 
 ### Changed

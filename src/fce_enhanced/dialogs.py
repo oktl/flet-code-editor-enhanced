@@ -48,8 +48,7 @@ def _searchable_list_dialog(
     )
 
     def _close(_e):
-        dlg.open = False
-        page.update()
+        page.pop_dialog()
 
     def _filter(e):
         q = (e.control.value or "").lower()
@@ -77,9 +76,7 @@ def _searchable_list_dialog(
         on_dismiss=_close,
     )
 
-    page.overlay.append(dlg)
-    dlg.open = True
-    page.update()
+    page.show_dialog(dlg)
     return dlg
 
 
@@ -99,8 +96,7 @@ async def confirm_discard(page: ft.Page) -> str:
     def _on_choice(action: str):
         def handler(_e):
             choice[0] = action
-            dlg.open = False
-            page.update()
+            page.pop_dialog()
 
         return handler
 
@@ -115,15 +111,12 @@ async def confirm_discard(page: ft.Page) -> str:
         ],
         actions_alignment=ft.MainAxisAlignment.END,
     )
-    page.overlay.append(dlg)
-    dlg.open = True
-    page.update()
+    page.show_dialog(dlg)
 
     while choice[0] is None:
         await asyncio.sleep(0.05)
 
-    page.overlay.remove(dlg)
-    page.update()
+    page.pop_dialog()
     return choice[0]
 
 
@@ -143,8 +136,7 @@ async def confirm_revert(page: ft.Page) -> bool:
     def _on_choice(revert: bool):
         def handler(_e):
             choice[0] = revert
-            dlg.open = False
-            page.update()
+            page.pop_dialog()
 
         return handler
 
@@ -158,15 +150,12 @@ async def confirm_revert(page: ft.Page) -> bool:
         ],
         actions_alignment=ft.MainAxisAlignment.END,
     )
-    page.overlay.append(dlg)
-    dlg.open = True
-    page.update()
+    page.show_dialog(dlg)
 
     while choice[0] is None:
         await asyncio.sleep(0.05)
 
-    page.overlay.remove(dlg)
-    page.update()
+    page.pop_dialog()
     return choice[0]
 
 
@@ -309,8 +298,7 @@ def show_language_dialog(
     toggle_row = ft.Row([common_btn, all_btn], spacing=4)
 
     def _close(_e):
-        dlg.open = False
-        page.update()
+        page.pop_dialog()
 
     dlg = ft.AlertDialog(
         title=ft.Text("Choose Language"),
@@ -328,9 +316,7 @@ def show_language_dialog(
         on_dismiss=_close,
     )
 
-    page.overlay.append(dlg)
-    dlg.open = True
-    page.update()
+    page.show_dialog(dlg)
     return dlg
 
 
@@ -367,13 +353,11 @@ async def goto_line_dialog(page: ft.Page, max_lines: int) -> int | None:
             return
         if 1 <= val <= max_lines:
             result[0] = val
-            dlg.open = False
-            page.update()
+            page.pop_dialog()
 
     def _cancel(_e):
         cancelled[0] = True
-        dlg.open = False
-        page.update()
+        page.pop_dialog()
 
     dlg = ft.AlertDialog(
         modal=True,
@@ -387,15 +371,12 @@ async def goto_line_dialog(page: ft.Page, max_lines: int) -> int | None:
         content_padding=ft.Padding.symmetric(horizontal=20, vertical=8),
         actions_padding=ft.Padding.only(right=12, bottom=8),
     )
-    page.overlay.append(dlg)
-    dlg.open = True
-    page.update()
+    page.show_dialog(dlg)
 
     while result[0] is None and not cancelled[0]:
         await asyncio.sleep(0.05)
 
-    page.overlay.remove(dlg)
-    page.update()
+    page.pop_dialog()
     return result[0]
 
 
@@ -436,13 +417,11 @@ async def open_command_palette(
 
     def _select(idx):
         chosen[0] = idx
-        dlg.open = False
-        page.update()
+        page.pop_dialog()
 
     def _dismiss(_e):
         cancelled[0] = True
-        dlg.open = False
-        page.update()
+        page.pop_dialog()
 
     cmd_list = ft.ListView(
         height=300,
@@ -488,15 +467,12 @@ async def open_command_palette(
         on_dismiss=_dismiss,
     )
 
-    page.overlay.append(dlg)
-    dlg.open = True
-    page.update()
+    page.show_dialog(dlg)
 
     while chosen[0] is None and not cancelled[0]:
         await asyncio.sleep(0.05)
 
-    page.overlay.remove(dlg)
-    page.update()
+    page.pop_dialog()
 
     if chosen[0] is not None:
         handler = commands[chosen[0]][2]
@@ -514,11 +490,10 @@ def show_help_dialog(page: ft.Page, content: str) -> None:
     """Show a scrollable markdown help dialog."""
 
     def _close(_e):
-        dlg.open = False
-        page.update()
+        page.pop_dialog()
 
-    async def _on_link(e):
-        await page.launch_url(e.data)
+    def _on_link(e):
+        page.run_task(page.launch_url, e.data)
 
     dlg = ft.AlertDialog(
         title=ft.Text("Help"),
@@ -540,6 +515,4 @@ def show_help_dialog(page: ft.Page, content: str) -> None:
         on_dismiss=_close,
     )
 
-    page.overlay.append(dlg)
-    dlg.open = True
-    page.update()
+    page.show_dialog(dlg)

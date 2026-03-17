@@ -137,12 +137,13 @@ wheels = [
 
 [[package]]
 name = "fce-enhanced"
-version = "0.1.4"
+version = "0.1.6"
 source = { editable = "." }
 dependencies = [
     { name = "flet" },
     { name = "flet-code-editor" },
     { name = "loguru" },
+    { name = "ruff" },
 ]
 
 [package.dev-dependencies]
@@ -159,6 +160,7 @@ requires-dist = [
     { name = "flet", specifier = ">=0.81.0" },
     { name = "flet-code-editor", specifier = ">=0.81.0" },
     { name = "loguru", specifier = ">=0.7" },
+    { name = "ruff", specifier = ">=0.15.4" },
 ]
 
 [package.metadata.requires-dev]

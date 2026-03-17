@@ -157,14 +157,14 @@ class EnhancedCodeEditor(ft.Column):
             ft.Icons.SAVE,
             icon_size=ICON_SIZE,
             tooltip="Save (⌘S)",
-            on_click=self._handle_save,
+            on_click=self._handle_save_click,
             disabled=True,
         )
         self._revert_btn = ft.IconButton(
             ft.Icons.SETTINGS_BACKUP_RESTORE,
             icon_size=ICON_SIZE,
             tooltip="Revert to Saved (⇧⌘R)",
-            on_click=self._handle_revert,
+            on_click=self._handle_revert_click,
             disabled=True,
         )
         self._lock_btn = ft.IconButton(
@@ -255,20 +255,20 @@ class EnhancedCodeEditor(ft.Column):
                     ft.Icons.FILE_OPEN,
                     icon_size=ICON_SIZE,
                     tooltip="Open (⌘O)",
-                    on_click=self._handle_open,
+                    on_click=self._handle_open_click,
                 ),
                 self._save_btn,
                 ft.IconButton(
                     ft.Icons.SAVE_AS,
                     icon_size=ICON_SIZE,
                     tooltip="Save As (⇧⌘S)",
-                    on_click=self._handle_save_as,
+                    on_click=self._handle_save_as_click,
                 ),
                 ft.IconButton(
                     ft.Icons.CLOSE,
                     icon_size=ICON_SIZE,
                     tooltip="Close File (⌘W) ",
-                    on_click=self._handle_close,
+                    on_click=self._handle_close_click,
                 ),
                 self._revert_btn,
                 self.appbar_divder,
@@ -276,13 +276,13 @@ class EnhancedCodeEditor(ft.Column):
                     ft.Icons.SEARCH,
                     icon_size=ICON_SIZE,
                     tooltip="Find (⌘F)",
-                    on_click=self._handle_find_click,
+                    on_click=self._handle_find_click_sync,
                 ),
                 ft.IconButton(
                     ft.Icons.FORMAT_LIST_NUMBERED,
                     icon_size=ICON_SIZE,
                     tooltip="Go to Line (⌘G)",
-                    on_click=self._handle_goto_line,
+                    on_click=self._handle_goto_line_click,
                 ),
                 ft.IconButton(
                     ft.Icons.REMOVE,
@@ -386,7 +386,7 @@ class EnhancedCodeEditor(ft.Column):
 
     def did_mount(self):
         if self._register_keyboard_shortcuts and self.page:
-            self.page.on_keyboard_event = self._handle_keyboard
+            self.page.on_keyboard_event = self._handle_keyboard_sync
 
     def will_unmount(self):
         if self._register_keyboard_shortcuts and self.page:
@@ -435,6 +435,32 @@ class EnhancedCodeEditor(ft.Column):
         """Show a Save/Discard/Cancel dialog. Returns chosen action string."""
         return await confirm_discard(self.page)
 
+    # --- Sync click wrappers (schedule async handlers via run_task) ---
+
+    def _handle_save_click(self, _e):
+        self.page.run_task(self._handle_save, _e)
+
+    def _handle_revert_click(self, _e):
+        self.page.run_task(self._handle_revert, _e)
+
+    def _handle_open_click(self, _e):
+        self.page.run_task(self._handle_open, _e)
+
+    def _handle_save_as_click(self, _e):
+        self.page.run_task(self._handle_save_as, _e)
+
+    def _handle_close_click(self, _e):
+        self.page.run_task(self._handle_close, _e)
+
+    def _handle_find_click_sync(self, _e):
+        self.page.run_task(self._handle_find_click, _e)
+
+    def _handle_goto_line_click(self, _e):
+        self.page.run_task(self._handle_goto_line, _e)
+
+    def _handle_keyboard_sync(self, e):
+        self.page.run_task(self._handle_keyboard, e)
+
     # --- File operations ---
 
     async def _handle_open(self, _e):
@@ -455,9 +481,7 @@ class EnhancedCodeEditor(ft.Column):
             content = Path(path).read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError, ValueError) as exc:
             err = ft.SnackBar(ft.Text(f"Cannot open file: {exc}"))
-            self.page.overlay.append(err)
-            err.open = True
-            self.page.update()
+            self.page.show_dialog(err)
             return
 
         if self._diff_pane.is_open:
@@ -500,13 +524,12 @@ class EnhancedCodeEditor(ft.Column):
     def _dismiss_snackbar(self) -> None:
         """Close the current snackbar if one is open."""
         if self._current_snackbar is not None and self._current_snackbar.open:
-            self._current_snackbar.open = False
-            self.page.update()
+            self.page.pop_dialog()
 
     def _show_snackbar(self, message: str, *, is_error: bool = False) -> None:
         """Show a message to the user via a SnackBar with a dismiss button."""
         if self._current_snackbar is not None and self._current_snackbar.open:
-            self._current_snackbar.open = False
+            self.page.pop_dialog()
         snack = ft.SnackBar(
             ft.Text(message, color=ft.Colors.WHITE, selectable=True),
             bgcolor=ft.Colors.RED_800 if is_error else ft.Colors.GREY_800,
@@ -514,9 +537,7 @@ class EnhancedCodeEditor(ft.Column):
             duration=86400000,  # effectively permanent until dismissed
         )
         self._current_snackbar = snack
-        self.page.overlay.append(snack)
-        snack.open = True
-        self.page.update()
+        self.page.show_dialog(snack)
 
     async def _run_ruff(self, path: str) -> None:
         """Run ruff check --fix and ruff format on a saved Python file.
@@ -703,9 +724,7 @@ class EnhancedCodeEditor(ft.Column):
         self._current_theme = theme
         self._code_editor.code_theme = theme
         self._diff_pane.code_theme = theme
-        if hasattr(self, "_theme_dlg") and self._theme_dlg is not None:
-            self._theme_dlg.open = False
-        self.page.update()
+        self.page.pop_dialog()
         self.update()
 
     # --- Language selection ---
@@ -723,9 +742,7 @@ class EnhancedCodeEditor(ft.Column):
         self._code_editor.language = lang
         self._lang_btn.content = ft.Text(self._language_display_name(lang), size=11)
         self._update_status_bar()
-        if hasattr(self, "_lang_dlg") and self._lang_dlg is not None:
-            self._lang_dlg.open = False
-        self.page.update()
+        self.page.pop_dialog()
         self.update()
 
     # --- Command palette ---

@@ -22,6 +22,9 @@ def _patch_page(editor: EnhancedCodeEditor):
     """Patch the page property, update, and focus for testing without a real page."""
     mock_page = MagicMock(spec=ft.Page)
     mock_page.overlay = []
+    mock_page.show_dialog = MagicMock()
+    mock_page.pop_dialog = MagicMock()
+    mock_page.run_task = MagicMock()
 
     page_patch = patch.object(
         type(editor), "page", new_callable=PropertyMock, return_value=mock_page
@@ -219,7 +222,7 @@ def test_keyboard_shortcuts_registered_on_mount():
     try:
         editor.did_mount()
         mock_page = editor.page
-        assert mock_page.on_keyboard_event == editor._handle_keyboard
+        assert mock_page.on_keyboard_event == editor._handle_keyboard_sync
     finally:
         _cleanup_patches(p1, p2, p3)
 
@@ -230,7 +233,7 @@ def test_keyboard_shortcuts_not_registered_when_disabled():
     try:
         editor.did_mount()
         mock_page = editor.page
-        assert mock_page.on_keyboard_event != editor._handle_keyboard
+        assert mock_page.on_keyboard_event != editor._handle_keyboard_sync
     finally:
         _cleanup_patches(p1, p2, p3)
 
@@ -592,10 +595,11 @@ async def test_handle_open_permission_error():
         ):
             await editor._handle_open(None)
 
-        # Should show a snackbar error, not crash
-        snackbars = [s for s in editor.page.overlay if isinstance(s, ft.SnackBar)]
-        assert len(snackbars) == 1
-        assert "access denied" in snackbars[0].content.value
+        # Should show a snackbar error via page.open, not crash
+        editor.page.show_dialog.assert_called_once()
+        snack = editor.page.show_dialog.call_args[0][0]
+        assert isinstance(snack, ft.SnackBar)
+        assert "access denied" in snack.content.value
         assert editor._current_path is None
     finally:
         _cleanup_patches(p1, p2, p3)
@@ -791,11 +795,12 @@ async def test_ruff_check_warnings_shown_in_snackbar(tmp_path):
         ):
             await editor._run_ruff(str(filepath))
 
-        # A snackbar should have been added to the page overlay
-        snackbars = [s for s in editor.page.overlay if isinstance(s, ft.SnackBar)]
-        assert len(snackbars) == 1
-        assert "F841" in snackbars[0].content.value
-        assert "Found 1" not in snackbars[0].content.value  # summary filtered out
+        # A snackbar should have been shown via page.open
+        editor.page.show_dialog.assert_called_once()
+        snack = editor.page.show_dialog.call_args[0][0]
+        assert isinstance(snack, ft.SnackBar)
+        assert "F841" in snack.content.value
+        assert "Found 1" not in snack.content.value  # summary filtered out
     finally:
         _cleanup_patches(p1, p2, p3)
 
