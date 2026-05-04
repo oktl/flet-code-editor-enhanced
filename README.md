@@ -39,13 +39,15 @@ pre-commit install  # optional, for development
 ### Run as a standalone app
 
 ```bash
-uvx fce-enhanced
+uvx fce-enhanced                     # open with an empty editor
+uvx fce-enhanced path/to/file.py     # open a specific file on launch
 ```
 
 During development:
 
 ```bash
-flet run src/fce_enhanced/editor.py
+flet run src/fce_enhanced/editor.py                     # open with an empty editor
+flet run src/fce_enhanced/editor.py path/to/file.py     # open a specific file on launch
 ```
 
 ### Embed in your own Flet app
