@@ -15,6 +15,7 @@ from contextlib import suppress
 from pathlib import Path
 import platform
 import shutil
+import sys
 
 import flet as ft
 import flet_code_editor as fce
@@ -463,20 +464,8 @@ class EnhancedCodeEditor(ft.Column):
 
     # --- File operations ---
 
-    async def _handle_open(self, _e):
-        if self._dirty:
-            action = await self._confirm_discard()
-            if action == "save":
-                await self._do_save()
-                if self._dirty:
-                    return
-            elif action == "cancel":
-                return
-
-        path = await open_file("Open File")
-        if path is None:
-            return
-
+    async def open_path(self, path: str) -> None:
+        """Load a file by path into the editor without a file-picker dialog."""
         try:
             content = Path(path).read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError, ValueError) as exc:
@@ -520,6 +509,22 @@ class EnhancedCodeEditor(ft.Column):
         self._set_ruff_on_save(path.endswith(".py"))
         self._mark_clean(content)
         await self._code_editor.focus()
+
+    async def _handle_open(self, _e):
+        if self._dirty:
+            action = await self._confirm_discard()
+            if action == "save":
+                await self._do_save()
+                if self._dirty:
+                    return
+            elif action == "cancel":
+                return
+
+        path = await open_file("Open File")
+        if path is None:
+            return
+
+        await self.open_path(path)
 
     def _dismiss_snackbar(self) -> None:
         """Close the current snackbar if one is open."""
@@ -1023,6 +1028,9 @@ async def main(page: ft.Page):
     page.add(editor)
 
     await page.window.center()
+
+    if len(sys.argv) > 1:
+        await editor.open_path(sys.argv[1])
 
 
 def run():
