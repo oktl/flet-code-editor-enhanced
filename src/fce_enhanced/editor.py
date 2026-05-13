@@ -925,38 +925,39 @@ class EnhancedCodeEditor(ft.Column):
             return
         is_mac = platform.system() == "Darwin"
         key = e.key.upper()
-        if key == "P" and e.shift:
-            await self._open_command_palette()
-        elif key == "F" and e.alt and is_mac:
-            await self._open_search(with_replace=True)
-        elif key == "F":
-            await self._open_search(with_replace=False)
-        elif key == "H" and not is_mac:
-            await self._open_search(with_replace=True)
-        elif key == "S" and not e.shift:
-            await self._do_save()
-        elif key == "S" and e.shift:
-            await self._do_save_as()
-        elif key == "O":
-            await self._handle_open(None)
-        elif key == "W":
-            await self._handle_close(None)
-        elif key == "R" and e.shift:
-            await self._handle_revert(None)
-        elif key == "L" and e.shift:
-            self._handle_language_click(None)
-        elif key == "L":
-            self._toggle_read_only()
-        elif key == "G" and e.shift:
-            self._toggle_gutter()
-        elif key == "G":
-            await self._handle_goto_line(None)
-        elif key == "EQUAL" or key == "+" or key == "=":
-            self._change_font_size(1)
-        elif key == "MINUS" or key == "-":
-            self._change_font_size(-1)
-        elif key == "D":
-            self._toggle_diff_pane()
+        match key:
+            case "P" if e.shift:
+                await self._open_command_palette()
+            case "F" if e.alt and is_mac:
+                await self._open_search(with_replace=True)
+            case "F":
+                await self._open_search(with_replace=False)
+            case "H" if not is_mac:
+                await self._open_search(with_replace=True)
+            case "S" if not e.shift:
+                await self._do_save()
+            case "S":
+                await self._do_save_as()
+            case "O":
+                await self._handle_open(None)
+            case "W":
+                await self._handle_close(None)
+            case "R" if e.shift:
+                await self._handle_revert(None)
+            case "L" if e.shift:
+                self._handle_language_click(None)
+            case "L":
+                self._toggle_read_only()
+            case "G" if e.shift:
+                self._toggle_gutter()
+            case "G":
+                await self._handle_goto_line(None)
+            case "EQUAL" | "+" | "=":
+                self._change_font_size(1)
+            case "MINUS" | "-":
+                self._change_font_size(-1)
+            case "D":
+                self._toggle_diff_pane()
 
     # --- Status bar ---
 
