@@ -29,8 +29,8 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "flet>=0.81.0",
-    "flet-code-editor>=0.81.0",
+    "flet>=0.85.1",
+    "flet-code-editor>=0.85.1",
     "loguru>=0.7",
     "ruff>=0.15.4",
 ]

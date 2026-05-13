@@ -108,7 +108,7 @@ class EnhancedCodeEditor(ft.Column):
 
         # --- State ---
         self._current_path: str | None = None
-        self._dirty: bool = False
+        self._file_dirty: bool = False
         self._loading: bool = False
         self._last_saved_content: str = value
         self._show_gutter: bool = show_gutter
@@ -358,7 +358,7 @@ class EnhancedCodeEditor(ft.Column):
     @property
     def dirty(self) -> bool:
         """Whether the editor has unsaved changes."""
-        return self._dirty
+        return self._file_dirty
 
     @property
     def code_editor(self) -> fce.CodeEditor:
@@ -407,22 +407,22 @@ class EnhancedCodeEditor(ft.Column):
             name = "untitled"
 
         self._title_bar.value = display
-        self._title_bar.color = ft.Colors.AMBER_600 if self._dirty else None
+        self._title_bar.color = ft.Colors.AMBER_600 if self._file_dirty else None
 
         if self.on_title_change:
-            self.on_title_change(display, name, self._dirty)
+            self.on_title_change(display, name, self._file_dirty)
 
         self.update()
 
     def _mark_dirty(self):
-        if not self._dirty:
-            self._dirty = True
+        if not self._file_dirty:
+            self._file_dirty = True
             self._save_btn.disabled = False
             self._revert_btn.disabled = False
             self._update_title()
 
     def _mark_clean(self, content: str):
-        self._dirty = False
+        self._file_dirty = False
         self._last_saved_content = content
         self._save_btn.disabled = True
         self._revert_btn.disabled = True
@@ -511,11 +511,11 @@ class EnhancedCodeEditor(ft.Column):
         await self._code_editor.focus()
 
     async def _handle_open(self, _e):
-        if self._dirty:
+        if self._file_dirty:
             action = await self._confirm_discard()
             if action == "save":
                 await self._do_save()
-                if self._dirty:
+                if self._file_dirty:
                     return
             elif action == "cancel":
                 return
@@ -661,7 +661,7 @@ class EnhancedCodeEditor(ft.Column):
         await self._do_save_as()
 
     async def _handle_close(self, _e):
-        if self._dirty:
+        if self._file_dirty:
             action = await self._confirm_discard()
             if action == "save":
                 saved = await self._do_save()
@@ -674,7 +674,7 @@ class EnhancedCodeEditor(ft.Column):
             self._diff_pane.close()
 
         self._current_path = None
-        self._dirty = False
+        self._file_dirty = False
         self._last_saved_content = DEFAULT_CODE
         self._save_btn.disabled = True
         self._set_ruff_on_save(False)
@@ -691,7 +691,7 @@ class EnhancedCodeEditor(ft.Column):
     # --- Revert to saved ---
 
     async def _handle_revert(self, _e):
-        if not self._dirty:
+        if not self._file_dirty:
             return
         confirmed = await confirm_revert(self.page)
         if not confirmed:
@@ -997,8 +997,8 @@ class EnhancedCodeEditor(ft.Column):
         content = self._code_editor.value or ""
         if content != self._last_saved_content:
             self._mark_dirty()
-        elif self._dirty:
-            self._dirty = False
+        elif self._file_dirty:
+            self._file_dirty = False
             self._save_btn.disabled = True
             self._revert_btn.disabled = True
             self._update_title()

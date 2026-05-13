@@ -157,8 +157,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "flet", specifier = ">=0.81.0" },
-    { name = "flet-code-editor", specifier = ">=0.81.0" },
+    { name = "flet", specifier = ">=0.85.1" },
+    { name = "flet-code-editor", specifier = ">=0.85.1" },
     { name = "loguru", specifier = ">=0.7" },
     { name = "ruff", specifier = ">=0.15.4" },
 ]
@@ -183,29 +183,29 @@ wheels = [
 
 [[package]]
 name = "flet"
-version = "0.81.0"
+version = "0.85.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "httpx", marker = "platform_system != 'Pyodide'" },
+    { name = "httpx", marker = "sys_platform != 'emscripten'" },
     { name = "msgpack" },
-    { name = "oauthlib", marker = "platform_system != 'Pyodide'" },
+    { name = "oauthlib", marker = "sys_platform != 'emscripten'" },
     { name = "repath" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/92/86/cd5c7c11155a8a5345065c5eafe086bb43ee129773118b9ef8951551bb51/flet-0.81.0.tar.gz", hash = "sha256:406466e378c8e863e6af1247f308837dfc90f4e1a40d476e47ac3881ff4b76e7", size = 444034, upload-time = "2026-02-24T18:16:31.549Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b2/71/32b7272b36679e6fbc71517bf80dff93197fde4aee8acb1b0d55fa5cc888/flet-0.85.1.tar.gz", hash = "sha256:5e27183ce2e51f8fec0068fd1d7683858d848a9309218e06034e65ac5f400c24", size = 501448, upload-time = "2026-05-13T16:35:54.771Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/73/db/417852ec9a2afe6bbd7fd1c797707fa3403b4880a75e132c44e272b9e519/flet-0.81.0-py3-none-any.whl", hash = "sha256:2bc22d9ddf65b30a836fff43455968a1531f0673a41c1c89eec494816ed68676", size = 540464, upload-time = "2026-02-24T18:16:30.214Z" },
+    { url = "https://files.pythonhosted.org/packages/38/2e/7c4d42e9f2c6b8a69d8ff8fd04e0e5f130c43bd92d9924a108d26fbd88fd/flet-0.85.1-py3-none-any.whl", hash = "sha256:34c962f11118e9f92fff77705fce9b257aab9d1d48012ce0a6d08c907918c70a", size = 579796, upload-time = "2026-05-13T16:35:56.605Z" },
 ]
 
 [[package]]
 name = "flet-code-editor"
-version = "0.81.0"
+version = "0.85.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "flet" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e5/b4/742c199809ac87a34c74e1a371efd6fa5196e0ecee622bc820e938384be3/flet_code_editor-0.81.0.tar.gz", hash = "sha256:e1a2e15292a5d2fe3e492682f12a8422a3e2de509f8e67581d4c3d335f971b63", size = 22316, upload-time = "2026-02-24T18:18:00.706Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1c/e2/eef9b5f7b1d01266b7a1e5c3edbd4ae06acaed5f6859f325635dd8e202f2/flet_code_editor-0.85.1.tar.gz", hash = "sha256:0ed906d5176b27b0e11f9a027d9c9534f47a5611e903a8aec059c490edc5c831", size = 14333, upload-time = "2026-05-13T16:36:30.224Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/06/29/c67ed829fb3510b6dd4e8af9e80987428a8fc907a99d3540b163ca0996a7/flet_code_editor-0.81.0-py3-none-any.whl", hash = "sha256:6c4fb3686c2adf573ac1832c3156527db71d5a74fa17dabbf86659458aefd0d5", size = 24016, upload-time = "2026-02-24T18:18:01.725Z" },
+    { url = "https://files.pythonhosted.org/packages/7f/49/7d636e641092b42dc46f25cb7a2f1ff35f3ab20b70c24d86b2eb24bdea84/flet_code_editor-0.85.1-py3-none-any.whl", hash = "sha256:a5f79e7ded9d43ff25ed1cc4c7b776f149e969125509b3473e85bce8b90e76ef", size = 16392, upload-time = "2026-05-13T16:36:31.346Z" },
 ]
 
 [[package]]
